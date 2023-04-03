@@ -63,6 +63,9 @@ define
       TweetsFolder = {GetSentenceFolder}
       BGColor=c(242 242 242) % couleur fond
       DarkerBGC=c(230 230 230) % couleur de contraste
+      Maxsize=maxsize(width:1920 height:1080)
+      Minsize=minsize(width:300 height:180)
+      %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
    in
       %% Fonction d'exemple qui liste tous les fichiers
       %% contenus dans le dossier passe en Argument.
@@ -83,12 +86,17 @@ define
 	 Description=td(
 			title: "Tweet predictor"
          bg:BGColor
-         lr(glue:nw 
+         maxsize:Maxsize
+         minsize:Minsize
+
+         %iconbitmap:ICO
+         lr(glue:nw
+            menubutton(glue:nw foreground:black bg:DarkerBGC text:"File"  menu:menu(background:DarkerBGC checkbutton(text:"Save" foreground:black action:proc{$} {Browse 'Stop clicking me it is awkward'} end )))
             tbbutton(text:"Save" bg:DarkerBGC glue:w action:proc{$} {Browse 'Stop clicking me it is awkward'} end) % Ici, on ajoute des boutons pour controler l'application
             tbbutton(text:"Quit" glue:e bg:DarkerBGC action:proc{$}{Application.exit 0} end))
 			lr(background:BGColor 
-            text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) 
-            button(text:"Predict" foreground:black bg:DarkerBGC width:15 action:Press))
+            text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word) 
+            button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press))
 			text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
 			)
