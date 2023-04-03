@@ -61,6 +61,8 @@ define
    %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
+      BGColor=c(242 242 242) % couleur fond
+      DarkerBGC=c(230 230 230) % couleur de contraste
    in
       %% Fonction d'exemple qui liste tous les fichiers
       %% contenus dans le dossier passe en Argument.
@@ -76,9 +78,17 @@ define
             % TODO
 	 
             % Creation de l interface graphique
+
+
 	 Description=td(
-			title: "Text predictor"
-			lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:Press))
+			title: "Tweet predictor"
+         bg:BGColor
+         lr(glue:nw 
+            tbbutton(text:"Save" bg:DarkerBGC glue:w action:proc{$} {Browse 'Stop clicking me it is awkward'} end) % Ici, on ajoute des boutons pour controler l'application
+            tbbutton(text:"Quit" glue:e bg:DarkerBGC action:proc{$}{Application.exit 0} end))
+			lr(background:BGColor 
+            text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) 
+            button(text:"Predict" foreground:black bg:DarkerBGC width:15 action:Press))
 			text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
 			)

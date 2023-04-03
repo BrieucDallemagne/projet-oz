@@ -19,3 +19,6 @@ Attention, on ne feed pas le *buffer*, on compile
 * Optimiser
 * faire du scrapping pour mettre à jour la base de donnée
 * Créer un bot twitter qui tweet comme elon musk
+
+## Ref
+[pour les interfaces graphiques](http://mozart2.org/mozart-v1/doc-1.4.0/mozart-stdlib/wp/qtk/html/)
