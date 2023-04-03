@@ -3,7 +3,7 @@
 ## Objectif
 * 2-gramme fonctionnel donc prend en compte 2 mots
 * Multi-Thread
-* Faire des teSTS "unitaires"
+* Faire des tests "unitaires"
 * Rapport de 2 pages qui décrit les extensions utilisées, et les infos utiles
 
 ## Impératif
