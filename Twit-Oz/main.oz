@@ -91,9 +91,14 @@ define
 
          %iconbitmap:ICO
          lr(glue:nw
-            menubutton(glue:nw foreground:black bg:DarkerBGC text:"File"  menu:menu(background:DarkerBGC checkbutton(text:"Save" foreground:black action:proc{$} {Browse 'Stop clicking me it is awkward'} end )))
-            tbbutton(text:"Save" bg:DarkerBGC glue:w action:proc{$} {Browse 'Stop clicking me it is awkward'} end) % Ici, on ajoute des boutons pour controler l'application
-            tbbutton(text:"Quit" glue:e bg:DarkerBGC action:proc{$}{Application.exit 0} end))
+            bg:DarkerBGC
+            menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File"  
+            menu:menu(background:DarkerBGC 
+               command(text:"Save" foreground:black action:proc{$} {Browse 'Stop clicking me it is awkward'} end )
+               command(text:"Save As" foreground:black  action:proc{$} {Browse 'Stop clicking me it is really awkward'} end) % Ici, on ajoute des boutons pour controler l'application
+               command(text:"Quit" foreground:black )    
+               ))
+            )
 			lr(background:BGColor 
             text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word) 
             button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press))
