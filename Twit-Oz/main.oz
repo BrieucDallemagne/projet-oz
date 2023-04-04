@@ -59,19 +59,22 @@ define
       %{Wait Return}  Return will be bound when the window is closed
    end
 
-   proc {ReadFile File} F in
+   fun {ReadFile File} F Res in
       F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
-      {F read(list:{Browse} size:100)} % set size to all to read the whole text
+      {F read(list:Res size:100)} % set size to all to read the whole text
       {F close}
+      Res
    end
 
-   proc {OpenMultipleFile L}
-      case L of nil then skip
-      [] H|T then {ReadFile H} {OpenMultipleFile T}
+   fun {OpenMultipleFile L}
+      case L of nil then nil
+      [] H|T then {ReadFile H}|{OpenMultipleFile T}
       end
    end
 
-
+   fun {Read Content}
+      Content
+   end
 
    %%% Decomnentez moi si besoin
    proc {ListAllFiles L}
@@ -116,10 +119,10 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
        
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText in
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles in
 	   {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-      {OpenMultipleFile {OS.getDir TweetsFolder}}
+      ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
             % TODO
 	 
             % Creation de l interface graphique
@@ -150,7 +153,7 @@ define
 			lr(background:BGColor 
             glue:nw
             text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
-            button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
+            button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {Browse {String.toAtom ReadFiles.1}} end key:"Return"))
 			text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
 			)
