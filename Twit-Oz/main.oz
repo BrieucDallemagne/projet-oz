@@ -28,9 +28,9 @@ define
    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
-   fun {Press}
+   proc {Press} %était fun avant mais ca buggait
       % TODO
-      0
+      {Browse 'On y travaille'}
    end
    
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -41,6 +41,9 @@ define
    end
    
    %%% Ajouter vos fonctions et procédures auxiliaires ici
+   proc {Save} %To Save input
+      {Browse 'Stop clicking me it is awkward'} 
+   end
 
 
    %%% Fetch Tweets Folder from CLI Arguments
@@ -49,6 +52,12 @@ define
       Args = {Application.getArgs record('folder'(single type:string optional:false))}
    in
       Args.'folder'
+   end
+
+   proc {NewWin Message Inside Handle Return}
+      {{QTk.build Inside} show}
+      {Handle set(Message)}
+      %{Wait Return}  Return will be bound when the window is closed
    end
 
    %%% Decomnentez moi si besoin
@@ -65,7 +74,26 @@ define
       DarkerBGC=c(230 230 230) % couleur de contraste
       Maxsize=maxsize(width:1920 height:1080)
       Minsize=minsize(width:300 height:180)
+      Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
       %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
+
+      HelpMessage="\n This tool has been designed for the class 'LINFO1104'\n \n The purpose of this tool is to provide completion of tweets based on a dataset (here right and far right public figure)\n \n Simply type in the white box something, click result and get the rest of the tweet in the black box\n \n If you want to save your input type CTRL+S and CTRL+SHIFT+S to save it somewhere else \n  repo: https://github.com/BrieucDallemagne/projet-oz"
+      POPUP R
+      Desc=td(
+         title:"PopUp"
+         maxsize:Maxsize
+         minsize:Minsize
+         background:BGColor
+         message(aspect:200
+                init:"This is a message widget" 
+                handle:POPUP
+                return:R
+                padx:40
+                pady:40
+                background:BGColor
+                foreground:black
+               )
+         action:toplevel#close) % quitte le programme quand la fenetre est fermee)
    in
       %% Fonction d'exemple qui liste tous les fichiers
       %% contenus dans le dossier passe en Argument.
@@ -75,7 +103,7 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
        
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort in
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving in
 	 {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 	 
             % TODO
@@ -92,16 +120,21 @@ define
          %iconbitmap:ICO
          lr(glue:nw
             bg:DarkerBGC
-            menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File"  
+            menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File" font:Font width:5
             menu:menu(background:DarkerBGC 
-               command(text:"Save" foreground:black action:proc{$} {Browse 'Stop clicking me it is awkward'} end )
-               command(text:"Save As" foreground:black  action:proc{$} {Browse 'Stop clicking me it is really awkward'} end) % Ici, on ajoute des boutons pour controler l'application
-               command(text:"Quit" foreground:black )    
+               tearoff:false
+               command(text:"Save" foreground:black action:Save accelerator:"Control-s")
+               command(text:"Save As" foreground:black action:proc{$} {Browse 'Stop clicking me it is really awkward'} end accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
+               command(text:"Quit" foreground:black action:proc{$}{Application.exit 0} end accelerator:"Control-q")    
                ))
-            )
+               menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"Help" font:Font width:5
+               menu:menu(background:DarkerBGC 
+                  tearoff:false
+                  command(text:"Newcommers"  foreground:black action:proc{$} {NewWin HelpMessage Desc POPUP R}end)
+                  command(text:"About" foreground:black))))
 			lr(background:BGColor 
             text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word) 
-            button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press))
+            button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
 			text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
 			)
@@ -111,8 +144,10 @@ define
 	 {Window show}
 	 
 	 {InputText tk(insert 'end' "Loading... Please wait.")}
-	 {InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
-	 
+	 %{InputText bind(event:"<Control-s>" action:Press)}  %You can also bind events
+    
+    
+
             % On lance les threads de lecture et de parsing
 	 SeparatedWordsPort = {NewPort SeparatedWordsStream}
 	 NbThreads = 4
