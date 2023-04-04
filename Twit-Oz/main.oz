@@ -29,7 +29,6 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    proc {Press} %était fun avant mais ca buggait
-      % TODO
       {Browse 'On y travaille'}
    end
    
@@ -60,12 +59,26 @@ define
       %{Wait Return}  Return will be bound when the window is closed
    end
 
+   proc {ReadFile File} F in
+      F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
+      {F read(list:{Browse} size:100)} % set size to all to read the whole text
+      {F close}
+   end
+
+   proc {OpenMultipleFile L}
+      case L of nil then skip
+      [] H|T then {ReadFile H} {OpenMultipleFile T}
+      end
+   end
+
+
+
    %%% Decomnentez moi si besoin
-   %proc {ListAllFiles L}
-   %   case L of nil then skip
-   %   [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
-   %   end
-   %end
+   proc {ListAllFiles L}
+      case L of nil then skip
+      [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
+      end
+   end
     
    %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -103,9 +116,10 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
        
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving in
-	 {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
-	 
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText in
+	   {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
+
+      {OpenMultipleFile {OS.getDir TweetsFolder}}
             % TODO
 	 
             % Creation de l interface graphique
@@ -119,12 +133,13 @@ define
 
          %iconbitmap:ICO
          lr(glue:nw
-            bg:DarkerBGC
+            background:DarkerBGC
             menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File" font:Font width:5
             menu:menu(background:DarkerBGC 
                tearoff:false
                command(text:"Save" foreground:black action:Save accelerator:"Control-s")
                command(text:"Save As" foreground:black action:proc{$} {Browse 'Stop clicking me it is really awkward'} end accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
+               separator
                command(text:"Quit" foreground:black action:proc{$}{Application.exit 0} end accelerator:"Control-q")    
                ))
                menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"Help" font:Font width:5
@@ -133,7 +148,8 @@ define
                   command(text:"Newcommers"  foreground:black action:proc{$} {NewWin HelpMessage Desc POPUP R}end)
                   command(text:"About" foreground:black))))
 			lr(background:BGColor 
-            text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word) 
+            glue:nw
+            text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
             button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
 			text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
