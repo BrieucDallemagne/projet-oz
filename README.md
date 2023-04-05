@@ -47,6 +47,8 @@ Comme nous disposons d'un large dataset, on peut estimer la probabilité d'un mo
 
 [Référence d'un bouqin](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjP4sCynJH-AhWZgP0HHTynAu0QFnoECCsQAQ&url=https%3A%2F%2Fwww.foo.be%2Fcours%2Fdess-20122013%2Fb%2FNatural%2520Language%2520Processing%2520with%2520Python%2520-%2520O%27Reilly2009.pdf&usg=AOvVaw3USAS04By7RstJc66n5WiL) Important de train les données à l'avance, une idée: structurer en PICKLE (j'ai vu ça dans le bouquin et c'est pris en charge en [Oz](http://mozart2.org/mozart-v1/doc-1.4.0/system/node57.html#chapter.pickle))
 
+On va utiliser des *Bytes-string* qui est plus efficace d'un facteur 8
+
 ## Définition
 
 * **Corpus**: le dataset sur lequel on se base
