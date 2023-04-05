@@ -59,6 +59,22 @@ define
       %{Wait Return}  Return will be bound when the window is closed
    end
 
+   fun {Split Input Track} SearchChar in % lis une entrée bytestring et sépare à chaque espace
+      SearchChar={ByteString.strchr Input Track " ".1}
+      if SearchChar==false then
+         nil
+      else
+         {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}
+      end
+   end
+      
+   % Prends un String (pas un byteString) donc utilisable directement en lecture de fichier
+   fun {SplitMultiple ArrayString}
+      case ArrayString of nil then nil
+      [] H|T then {Split {ByteString.make H} 0}|{SplitMultiple T}
+      end
+   end
+
    %fun {Split Input Track Acc}
    %   case Input of nil then Acc
    %   [] H|T then
@@ -118,7 +134,6 @@ define
       )
       action:toplevel#close) % quitte le programme quand la fenetre est fermee)
 
-      Opti={ByteString.make " hello world !"}
    in
       %% Fonction d'exemple qui liste tous les fichiers
       %% contenus dans le dossier passe en Argument.
@@ -128,22 +143,17 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles in
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-      %Utilisation de Byte-String
-      {Browse Opti}   
-      {Browse {ByteString.width Opti}}
-      {Browse {ByteString.length Opti}}
-      {Browse {Char.is " "}}
-      {Browse {ByteString.strchr Opti 0 " ".1}}
-
+      %Lis les fichiers
       ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
-      % TODO
-
+      %Test de la fonction de split les espaces
+      {Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
+      
+      TestRes={SplitMultiple ReadFiles}
+      
       % Creation de l interface graphique
-
-
       Description=td(
       title: "Tweet predictor"
       bg:BGColor
@@ -170,7 +180,7 @@ define
       glue:nw
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
       button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {Browse {String.toAtom ReadFiles.1}} end key:"Return"))
-      text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
+      text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
 
