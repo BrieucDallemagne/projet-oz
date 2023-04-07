@@ -52,7 +52,7 @@ On va utiliser des *Bytes-string* qui est plus efficace d'un facteur 8
 ## Définition
 
 * **Corpus**: le dataset sur lequel on se base
-* **Bigram**: un N-gram de 2 qui est donc consister de tel sorte `Brieuc est coincé du cul` est lu `"Brieuc est", "est coincé", "coincé du", "du cul"`
+* **Bigram**: un N-gram de 2 qui est donc consister de tel sorte `Thomas se branle sur son code` est lu `"Thomas se", "se branle", "branle sur", "sur son","son code"`
 
 ## Implémentation
 1. Lire le Data set et split mot par mot
