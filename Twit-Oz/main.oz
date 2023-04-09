@@ -5,9 +5,13 @@ import
    Application
    Open
    OS
+   Pickle
    Property
    Browser
 define
+   NumberWord=467085 % à généraliser pour tout système
+   DataBase=0 %load Pickle
+
    %%% Pour ouvrir les fichiers
    class TextFile
       from Open.file Open.text
@@ -83,7 +87,7 @@ define
 
    fun {ReadFile File} F Res in
       F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
-      {F read(list:Res size:100)} % set size to all to read the whole text
+      {F read(list:Res size:all)} % set size to all to read the whole text
       {F close}
       Res
    end
@@ -99,12 +103,49 @@ define
       Content
    end
 
+   %Prends en entrée le nom d'un fichier et indique le nombre de mot
+   fun {CountWords File} Count in
+      {List.length {Split {ByteString.make {String.toAtom File}} 0} Count}
+      Count
+   end
+
+   %Prends en entrée une liste de nom de fichier et retourner la somme totale du nombres de mots
+   fun {CountAllWords Files}
+      case Files of nil then 0
+      [] H|T then {CountWords H} + {CountAllWords T}
+      end
+   end
+
    %%% Decomnentez moi si besoin
    proc {ListAllFiles L}
       case L of nil then skip
       [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
       end
    end
+
+   fun {TrainingOneWord Word File} Size in
+      Size=NumberWord
+      0
+   end
+
+   %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
+   fun {TrainingOneWordFiles Word Files} Size in
+      Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
+      0
+   end
+
+   proc {UpdateDatabase Handle}
+      NumberWord={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
+      DataBase=0
+
+      {Pickle.saveWithHeader NumberWord "Pickle/NumberWord" "Nombre mots" 0} %0 à 9 et au + haut au + compressé
+      {Pickle.saveWithHeader DataBase "Pickle/DataBase" "La base de donnée" 0}
+
+      {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
+   end
+
+
+
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -143,16 +184,20 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes in
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
       ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
       %Test de la fonction de split les espaces
-      {Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
-      
-      TestRes={SplitMultiple ReadFiles}
-      
+      %{Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
+
+      %TestRes={SplitMultiple ReadFiles}
+
+      %CountTest={CountAllWords ReadFiles}
+      %{Browse CountTest}
+
+
       % Creation de l interface graphique
       Description=td(
       title: "Tweet predictor"
@@ -166,6 +211,8 @@ define
       menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File" font:Font width:5
       menu:menu(background:DarkerBGC 
       tearoff:false
+      command(text:"Update Database" foreground:black action:proc{$}{UpdateDatabase FeedbackUpdate}end accelerator:"Control-b")
+      separator
       command(text:"Save" foreground:black action:Save accelerator:"Control-s")
       command(text:"Save As" foreground:black action:proc{$} {Browse 'Stop clicking me it is really awkward'} end accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
       separator
@@ -181,6 +228,7 @@ define
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
       button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {Browse {String.toAtom ReadFiles.1}} end key:"Return"))
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
+      text(init:"Pour mettre à jour la base de donnée, cliquer sur File" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end)
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
 

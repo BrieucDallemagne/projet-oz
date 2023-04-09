@@ -8,6 +8,7 @@
   - [Ref](#ref)
   - [Fonctionnement N-Gramme](#fonctionnement-n-gramme)
   - [Définition](#définition)
+  - [Info pour développement](#info-pour-développement)
   - [Implémentation](#implémentation)
 
 
@@ -53,6 +54,11 @@ On va utiliser des *Bytes-string* qui est plus efficace d'un facteur 8
 
 * **Corpus**: le dataset sur lequel on se base
 * **Bigram**: un N-gram de 2 qui est donc consister de tel sorte `Thomas se branle sur son code` est lu `"Thomas se", "se branle", "branle sur", "sur son","son code"`
+
+## Info pour développement
+
+Il y a 467 085 mots en excluant le script de "Don Quijote"
+Ce document représente quasi la moitié des caractères de tous les autres documents, tellement large que Oz lag
 
 ## Implémentation
 1. Lire le Data set et split mot par mot
