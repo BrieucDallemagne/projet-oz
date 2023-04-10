@@ -10,6 +10,7 @@
   - [Définition](#définition)
   - [Info pour développement](#info-pour-développement)
   - [Implémentation](#implémentation)
+  - [Pour aller plus loin](#pour-aller-plus-loin)
 
 
 ## Objectif
@@ -67,3 +68,12 @@ Ce document représente quasi la moitié des caractères de tous les autres docu
 4. Sauvegarder ces tuples en Pickle
 5. Lire le Pickle
 6. Simplement appliquer la formule
+
+## Pour aller plus loin
+* Optimiser en utilisant un thread qui lit le doc, un qui split, un qui compte, un qui sauvegarde
+* Faire un 3-gramme
+* Faire un N-gramme qui si ne trouver rien fait (N-1)-gramme etc
+* Meilleur interface
+* Pull depuis Twitter pour de nouveaux Tweets
+* Mettre le résultat dès que l'utilisateur tape (très facile)
+* Sauvegarder les inputs
