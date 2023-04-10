@@ -9,8 +9,8 @@ import
    Property
    Browser
 define
-   NumberWord=467085 % à généraliser pour tout système
-   DataBase=0 %load Pickle
+   NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
+   DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
 
    %%% Pour ouvrir les fichiers
    class TextFile
@@ -123,6 +123,8 @@ define
       end
    end
 
+   %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
+   %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
    fun {TrainingOneWord Word File Flag Acc} Size in
       Size=NumberWord
       case File of nil then nil
@@ -149,12 +151,12 @@ define
       end
    end
 
-   proc {UpdateDatabase Handle}
+   proc {UpdateDatabase Handle} Test in
       NumberWord={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
       DataBase=0
 
-      {Pickle.saveWithHeader NumberWord "Pickle/NumberWord" "Nombre mots" 0} %0 à 9 et au + haut au + compressé
-      {Pickle.saveWithHeader DataBase "Pickle/DataBase" "La base de donnée" 0}
+      {Pickle.saveWithHeader NumberWord "Pickle/NumberWord.ozp" "Nombre mots" 0} %0 à 9 et au + haut au + compressé
+      {Pickle.saveWithHeader DataBase "Pickle/DataBase.ozp" "La base de donnée" 0}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
    end
@@ -211,10 +213,11 @@ define
 
       %CountTest={CountAllWords ReadFiles}
       %{Browse CountTest}
-      TestRes={OpenMultipleFile ReadFiles}
-      CountTest={NewDictionary}
 
-      Another={TrainingOneWordFiles {ByteString.make "This"} ReadFiles CountTest}
+      %Pickle Test
+      %TestRes={OpenMultipleFile ReadFiles}
+      %CountTest={NewDictionary}
+      %Another={TrainingOneWordFiles {ByteString.make "This"} ReadFiles CountTest}
 
 
       % Creation de l interface graphique
@@ -247,7 +250,7 @@ define
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
       button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {Browse {String.toAtom ReadFiles.1}} end key:"Return"))
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
-      text(init:"Pour mettre à jour la base de donnée, cliquer sur File" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end)
+      text(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end)
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
 
