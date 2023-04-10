@@ -150,7 +150,7 @@ define
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom "the"} Acc} "Pickle/Word/The.ozp" "Pour The" 0}
+         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0}
       [] H|T then 
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
@@ -206,6 +206,11 @@ define
       {InputHandle get(1:InputText)}
       Last={GetLast {Split {ByteString.make {String.toAtom InputText}} 0} {ByteString.make "NaN"}} %need to change NaN
       {Browse {String.toAtom{ByteString.toString Last}}}
+
+      %To delete or useles
+      TempDict={NewDictionary}
+      TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
+      {TrainingOneWordFiles {ByteString.toString Last} TempRes TempDict}
 
       %Add the true Pickle loading with concatenation
       Dict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} % need to add a check
