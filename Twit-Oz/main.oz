@@ -205,17 +205,20 @@ define
    proc {PressSecond InputHandle OutputHandle} InputText Last Dict TempDict TempRes in
       {InputHandle get(1:InputText)}
       Last={GetLast {Split {ByteString.make {String.toAtom InputText}} 0} {ByteString.make "NaN"}} %need to change NaN
-      {Browse {String.toAtom{ByteString.toString Last}}}
 
-      %To delete or useles
-      TempDict={NewDictionary}
-      TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-      {TrainingOneWordFiles {ByteString.toString Last} TempRes TempDict}
+      %Check if the Pickle is already existing
+      if {List.member {VirtualString.toString {ByteString.toString Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
+         TempDict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} 
+         Dict={Record.toDictionary TempDict}
+      else
+         Dict={NewDictionary}
+         TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
+         {TrainingOneWordFiles {ByteString.toString Last} TempRes Dict}
+      end
 
       %Add the true Pickle loading with concatenation
-      Dict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} % need to add a check
       %create a search inside a tuple
-      {OutputHandle set(1:InputText#' '#{FindBiggestDict {Record.toDictionary Dict}})}
+      {OutputHandle set(1:InputText#{FindBiggestDict Dict})}
    end
 
 
@@ -270,12 +273,12 @@ define
       %{Browse CountTest}
 
       %Pickle Test
-      CountTest={NewDictionary}
-      TestRes={SplitMultiple ReadFiles}
-      {TrainingOneWordFiles "the" TestRes CountTest}
-      {Browse {Dictionary.keys CountTest}}
+      %CountTest={NewDictionary}
+      %TestRes={SplitMultiple ReadFiles}
+      %{TrainingOneWordFiles "the" TestRes CountTest}
+      %{Browse {Dictionary.keys CountTest}}
       %{DisplayDict CountTest} Décommenter si on veut voir les valeurs
-      {Browse {FindBiggestDict CountTest}}
+      %{Browse {FindBiggestDict CountTest}}
 
 
       % Creation de l interface graphique
