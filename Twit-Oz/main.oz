@@ -123,15 +123,30 @@ define
       end
    end
 
-   fun {TrainingOneWord Word File} Size in
+   fun {TrainingOneWord Word File Flag Acc} Size in
       Size=NumberWord
-      0
+      case File of nil then nil
+      [] H|T then
+         if Flag then
+            {Dictionary.put Acc H ({Dictionary.condGet Acc H 0}+(1 div NumberWord))}
+         else
+            if H==Word then
+               {TrainingOneWord Word T true Acc}
+            else
+               {TrainingOneWord Word T true Acc}
+            end
+         end
+      end
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   fun {TrainingOneWordFiles Word Files} Size in
+   fun {TrainingOneWordFiles Word Files Acc} Size NewAcc in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
-      0
+      case Files of nil then Acc
+      [] H|T then 
+         NewAcc={TrainingOneWord Word H false Acc} 
+         {TrainingOneWordFiles Word T NewAcc}
+      end
    end
 
    proc {UpdateDatabase Handle}
@@ -184,7 +199,7 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate in
+      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
@@ -196,6 +211,10 @@ define
 
       %CountTest={CountAllWords ReadFiles}
       %{Browse CountTest}
+      TestRes={OpenMultipleFile ReadFiles}
+      CountTest={NewDictionary}
+
+      Another={TrainingOneWordFiles {ByteString.make "This"} ReadFiles CountTest}
 
 
       % Creation de l interface graphique
