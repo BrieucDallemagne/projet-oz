@@ -66,7 +66,7 @@ define
    fun {Split Input Track} SearchChar in % lis une entrée bytestring et sépare à chaque espace
       SearchChar={ByteString.strchr Input Track " ".1}
       if SearchChar==false then
-         nil
+         nil % Include the last word
       else
          {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}
       end
@@ -103,10 +103,10 @@ define
       Content
    end
 
-   %Prends en entrée le nom d'un fichier et indique le nombre de mot
+   %Prends en entrée le contenu d'un fichier (un gros string) et retourne le nombre de mot
    fun {CountWords File} Count in
       {List.length {Split {ByteString.make {String.toAtom File}} 0} Count}
-      Count
+      Count+1
    end
 
    %Prends en entrée une liste de nom de fichier et retourner la somme totale du nombres de mots
@@ -125,29 +125,35 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   fun {TrainingOneWord Word File Flag Acc} Size in
+   proc {TrainingOneWord Word File Flag Acc} Size Retrieve Inc in
       Size=NumberWord
-      case File of nil then nil
+
+      case File of nil then skip
       [] H|T then
          if Flag then
-            {Dictionary.put Acc H ({Dictionary.condGet Acc H 0}+(1 div NumberWord))}
+            Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            Inc=1
+            {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
          else
-            if H==Word then
+            if {ByteString.toString H}==Word then
                {TrainingOneWord Word T true Acc}
             else
-               {TrainingOneWord Word T true Acc}
+               {TrainingOneWord Word T Flag Acc}
             end
          end
       end
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   fun {TrainingOneWordFiles Word Files Acc} Size NewAcc in
+   proc {TrainingOneWordFiles Word Files Acc} Size NewAcc ByteFiles in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
-      case Files of nil then Acc
+      
+      case Files of nil then 
+         %Because Dictionnary is not supported by pickle in Oz
+         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom "the"} Acc} "Pickle/Word/The.ozp" "Pour The" 0}
       [] H|T then 
-         NewAcc={TrainingOneWord Word H false Acc} 
-         {TrainingOneWordFiles Word T NewAcc}
+         {TrainingOneWord Word H false Acc} 
+         {TrainingOneWordFiles Word T Acc}
       end
    end
 
@@ -161,7 +167,51 @@ define
       {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
    end
 
+   proc {DisplayDictHelper List Dic}
+      case List of nil then skip
+      [] H|T then {Browse {Dictionary.get Dic H}} % ajouter concatenation mais incompréhensible et inefficace en Oz
+                  {DisplayDictHelper T Dic}
+      end
+   end
 
+   %Print the key and its value associate with
+   proc {DisplayDict Dic}
+      {DisplayDictHelper {Dictionary.keys Dic} Dic}
+   end
+
+   fun {FindBiggestDictHelper List Dic Biggest Name}
+      case List of nil then Name
+      [] H|T then
+         if {Dictionary.get Dic H} > Biggest then
+            {FindBiggestDictHelper T Dic {Dictionary.get Dic H} H}
+         else
+            {FindBiggestDictHelper T Dic Biggest Name}
+         end
+      end
+   end
+
+   %Find the key with the highest number
+   fun {FindBiggestDict Dic}
+      {FindBiggestDictHelper {Dictionary.keys Dic} Dic 0 nil}
+   end
+
+   fun {GetLast List Acc}
+      case List of nil then Acc
+      [] H|T then {GetLast T H}
+      end
+   end
+
+   %Function for pressing the "Result" button in the GUI
+   proc {PressSecond InputHandle OutputHandle} InputText Last Dict TempDict TempRes in
+      {InputHandle get(1:InputText)}
+      Last={GetLast {Split {ByteString.make {String.toAtom InputText}} 0} {ByteString.make "NaN"}} %need to change NaN
+      {Browse {String.toAtom{ByteString.toString Last}}}
+
+      %Add the true Pickle loading with concatenation
+      Dict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} % need to add a check
+      %create a search inside a tuple
+      {OutputHandle set(1:InputText#' '#{FindBiggestDict {Record.toDictionary Dict}})}
+   end
 
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
@@ -215,9 +265,12 @@ define
       %{Browse CountTest}
 
       %Pickle Test
-      %TestRes={OpenMultipleFile ReadFiles}
-      %CountTest={NewDictionary}
-      %Another={TrainingOneWordFiles {ByteString.make "This"} ReadFiles CountTest}
+      CountTest={NewDictionary}
+      TestRes={SplitMultiple ReadFiles}
+      {TrainingOneWordFiles "the" TestRes CountTest}
+      {Browse {Dictionary.keys CountTest}}
+      %{DisplayDict CountTest} Décommenter si on veut voir les valeurs
+      {Browse {FindBiggestDict CountTest}}
 
 
       % Creation de l interface graphique
@@ -248,7 +301,7 @@ define
       lr(background:BGColor 
       glue:nw
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
-      button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {Browse {String.toAtom ReadFiles.1}} end key:"Return"))
+      button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {PressSecond InputText OutputText} end key:"Return"))
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
       text(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end)
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee

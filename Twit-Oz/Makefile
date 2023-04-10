@@ -18,5 +18,10 @@ all : $(ENTRY_POINT)
 run: $(ENTRY_POINT) 
 	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER)
 
+pickle:
+	rm -f Pickle/*.ozp
+
 clean :
 	rm -f *.ozf
+
+.PHONY: clean pickle
