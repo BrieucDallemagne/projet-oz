@@ -19,7 +19,7 @@ run: $(ENTRY_POINT)
 	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER)
 
 pickle:
-	rm -f Pickle/*.ozp
+	rm -f Pickle/Word/*.ozp
 
 clean :
 	rm -f *.ozf
