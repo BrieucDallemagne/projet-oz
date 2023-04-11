@@ -1,6 +1,6 @@
-# projet-oz plus jamais je vais sur superprof je vois ta gueule partout
+# projet-oz 
 
-- [projet-oz plus jamais je vais sur superprof je vois ta gueule partout](#projet-oz-plus-jamais-je-vais-sur-superprof-je-vois-ta-gueule-partout)
+- [projet-oz](#projet-oz)
   - [Objectif](#objectif)
   - [Impératif](#impératif)
   - [Info fichier et fonction](#info-fichier-et-fonction)
@@ -54,7 +54,7 @@ On va utiliser des *Bytes-string* qui est plus efficace d'un facteur 8
 ## Définition
 
 * **Corpus**: le dataset sur lequel on se base
-* **Bigram**: un N-gram de 2 qui est donc consister de tel sorte `Thomas se branle sur son code` est lu `"Thomas se", "se branle", "branle sur", "sur son","son code"`
+* **Bigram**: un N-gram de 2 qui est donc consister de tel sorte `Thomas aime coder` est lu `"Thomas aime", "aime coder"`
 
 ## Info pour développement
 
