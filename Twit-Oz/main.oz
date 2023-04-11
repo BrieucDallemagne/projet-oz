@@ -161,15 +161,31 @@ define
       end
    end
 
+   fun {GetOs} OSType in
+      OSType={Atom.toString {OS.getEnv 'OZHOME'}}
+      if OSType.1 == 67 then %67 is the ASCII code for "C"
+         "Windows"
+      else
+         "Linux"
+      end 
+   end
+
+
    %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
-   proc {UpdateDatabase Handle} Test in
-      NumberWord={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-      DataBase=0
+   proc {UpdateDatabase Handle} Test PidI StatusT OSType Info in
+      OSType={GetOs}
+      Test={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
-      {Pickle.saveWithHeader NumberWord "Pickle/NumberWord.ozp" "Nombre mots" 0} %0 à 9 et au + haut au + compressé
-      {Pickle.saveWithHeader DataBase "Pickle/DataBase.ozp" "La base de donnée" 0}
+      {Pickle.saveWithHeader Test "Pickle/NumberWord.ozp" "Nombre mots" 0} % 0 à 9 et au + haut au + compressé
 
-      {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
+      if OSType=="Linux" then
+         {OS.pipe "sh Pickle/Update.sh" "" PidI StatusT}
+         Info=" "
+      else
+         Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
+      end
+
+      {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
    end
 
    %Just a Helper procedure to dipslay all Keys of dictionary. YOU SHOULD CALL {DisplayDict Dic} RATHER
