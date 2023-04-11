@@ -77,7 +77,7 @@ define
       if SearchChar == false then 
          nil % Inclure le dernier mot
       else
-         {ByteString.slice Input Track SearchChar} | {Split SearchChar + 1}
+         {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}
       end
    end
 
