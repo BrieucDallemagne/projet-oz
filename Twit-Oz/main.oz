@@ -66,15 +66,21 @@ define
 
    %Input: a bytestring and Track is the offset to start looking for the space character
    %Return: a list of bytestring
-   fun {Split Input Track} SearchChar in % lis une entrée bytestring et sépare à chaque espace
-      SearchChar={ByteString.strchr Input Track " ".1}
-      if SearchChar==false then
-         nil % Include the last word
+   fun {Split Input Track} SearchChar in
+      %if {ByteString.elt Input {ByteString.length Input - 1}} != " " then
+       %  NewInput = {ByteString.concat Input Bytes.fromString(" ")}
+      %else
+      %   NewInput = Input
+      %end
+   
+      SearchChar = {ByteString.strchr Input Track " ".1}
+      if SearchChar == false then 
+         nil % Inclure le dernier mot
       else
-         {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}
+         {ByteString.slice Input Track SearchChar} | {Split SearchChar + 1}
       end
    end
-      
+
    % Prends un String (pas un byteString) donc utilisable directement en lecture de fichier
    fun {SplitMultiple ArrayString}
       case ArrayString of nil then nil
