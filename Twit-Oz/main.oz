@@ -167,15 +167,31 @@ define
       end
    end
 
+   fun {GetOs} OSType in
+      OSType={Atom.toString {OS.getEnv 'OZHOME'}}
+      if OSType.1 == 67 then %67 is the ASCII code for "C"
+         "Windows"
+      else
+         "Linux"
+      end 
+   end
+
+
    %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
-   proc {UpdateDatabase Handle} Test in
-      NumberWord={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-      DataBase=0
+   proc {UpdateDatabase Handle} Test PidI StatusT OSType Info in
+      OSType={GetOs}
+      Test={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
-      {Pickle.saveWithHeader NumberWord "Pickle/NumberWord.ozp" "Nombre mots" 0} %0 à 9 et au + haut au + compressé
-      {Pickle.saveWithHeader DataBase "Pickle/DataBase.ozp" "La base de donnée" 0}
+      {Pickle.saveWithHeader Test "Pickle/NumberWord.ozp" "Nombre mots" 0} % 0 à 9 et au + haut au + compressé
 
-      {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
+      if OSType=="Linux" then
+         {OS.pipe "sh Pickle/Update.sh" "" PidI StatusT}
+         Info=" "
+      else
+         Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
+      end
+
+      {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
    end
 
    %Just a Helper procedure to dipslay all Keys of dictionary. YOU SHOULD CALL {DisplayDict Dic} RATHER
@@ -305,7 +321,7 @@ define
       %iconbitmap:ICO
       lr(glue:nw
       background:DarkerBGC
-      menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"File" font:Font width:5
+      menubutton(glue:nw foreground:black highlightcolor:DarkerBGC background:DarkerBGC text:"File" font:Font width:5
       menu:menu(background:DarkerBGC 
       tearoff:false
       command(text:"Update Database" foreground:black action:proc{$}{UpdateDatabase FeedbackUpdate}end accelerator:"Control-b")
@@ -322,10 +338,12 @@ define
       command(text:"About" foreground:black))))
       lr(background:BGColor 
       glue:nw
-      text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw) 
+      text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw insertbackground:black) 
       button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {PressSecond InputText OutputText} end key:"Return"))
+      lr(background:BGColor 
+      glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
-      text(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end)
+      text(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
 
