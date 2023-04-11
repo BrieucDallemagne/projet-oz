@@ -57,12 +57,15 @@ define
       Args.'folder'
    end
 
+   %To create a pop-up window displaying some text
    proc {NewWin Message Inside Handle Return}
       {{QTk.build Inside} show}
       {Handle set(Message)}
       %{Wait Return}  Return will be bound when the window is closed
    end
 
+   %Input: a bytestring and Track is the offset to start looking for the space character
+   %Return: a list of bytestring
    fun {Split Input Track} SearchChar in % lis une entrée bytestring et sépare à chaque espace
       SearchChar={ByteString.strchr Input Track " ".1}
       if SearchChar==false then
@@ -85,6 +88,7 @@ define
    %      if H==" " then
    %end
 
+   %Read a file. File is the name of the file
    fun {ReadFile File} F Res in
       F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
       {F read(list:Res size:all)} % set size to all to read the whole text
@@ -92,7 +96,7 @@ define
       Res
    end
 
-   % Lis un fichier et fais une liste de son contenu
+   %Read a directory of file (L is a list of name) and make a list of string of a file
    fun {OpenMultipleFile L}
       case L of nil then nil
       [] H|T then {ReadFile H}|{OpenMultipleFile T}
@@ -150,13 +154,14 @@ define
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0}
+         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then 
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
       end
    end
 
+   %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
    proc {UpdateDatabase Handle} Test in
       NumberWord={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
       DataBase=0
@@ -167,6 +172,7 @@ define
       {Handle set(1:"La base de donnée à été mise à jour avec succès!" foreground:green)}
    end
 
+   %Just a Helper procedure to dipslay all Keys of dictionary. YOU SHOULD CALL {DisplayDict Dic} RATHER
    proc {DisplayDictHelper List Dic}
       case List of nil then skip
       [] H|T then {Browse {Dictionary.get Dic H}} % ajouter concatenation mais incompréhensible et inefficace en Oz
@@ -179,6 +185,7 @@ define
       {DisplayDictHelper {Dictionary.keys Dic} Dic}
    end
 
+   %Just a HELPER procedure to find the biggest value.  YOU SHOULD CALL {FingBiggestDic Dic} RATHER
    fun {FindBiggestDictHelper List Dic Biggest Name}
       case List of nil then Name
       [] H|T then
@@ -195,6 +202,7 @@ define
       {FindBiggestDictHelper {Dictionary.keys Dic} Dic 0 nil}
    end
 
+   %Get the last input of an input of text
    fun {GetLast List Acc}
       case List of nil then Acc
       [] H|T then {GetLast T H}

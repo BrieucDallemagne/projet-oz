@@ -1,0 +1,43 @@
+name: Compiling
+run-name: Compiling of .tex
+on:
+  push:
+    branches:
+      - main
+jobs:
+#  downloading:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - run: sudo apt-get install texlive-latex-base
+#      - run: sudo apt-get install texlive-fonts-recommended
+#      - run: sudo apt-get install texlive-fonts-extra
+#      - run: sudo apt-get install texlive-latex-extra
+  compiling:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+#      - name: Setting Up
+#        run: |
+#          sudo apt-get install texlive-latex-base
+#          sudo apt-get install texlive-fonts-recommended
+#          sudo apt-get install texlive-fonts-extra
+#          sudo apt-get install texlive-latex-extra
+#          sudo apt install texlive-lang-french
+#      - name: Compiling
+#        run: |    
+#          ls
+#          make -f Makefile
+#      - name: Storing
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: SyntheseCompilee
+#          path: SyntheseCompilee/
+#      - name: Download(test)
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: SyntheseCompilee
+#          path: SyntheseCompilee/
+#
+# I need to find a way to easily download Oz on linux
