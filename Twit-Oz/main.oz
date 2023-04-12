@@ -14,7 +14,6 @@ define
    OutputText
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
-
    %%% Pour ouvrir les fichiers
    class TextFile
       from Open.file Open.text
@@ -298,11 +297,15 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another in
+      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
       ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
+
+      proc {Newcommers POPUP}
+         {NewWin HelpMessage Desc POPUP R}
+      end
       %Test de la fonction de split les espaces
       %{Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
 
@@ -318,7 +321,6 @@ define
       %{Browse {Dictionary.keys CountTest}}
       %{DisplayDict CountTest} Décommenter si on veut voir les valeurs
       %{Browse {FindBiggestDict CountTest}}
-
 
       % Creation de l interface graphique
       Description=td(
@@ -343,7 +345,11 @@ define
       menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"Help" font:Font width:5
       menu:menu(background:DarkerBGC 
       tearoff:false
-      command(text:"Newcommers"  foreground:black action:proc{$} {NewWin HelpMessage Desc POPUP R}end)
+      %local Handle in
+      %   Handle = {New POPUP}
+      %   {Newcommers Handle}
+      %end
+      command(text:"Newcommers"  foreground:black action:proc{$}{Newcommers POPUP} end)
       command(text:"About" foreground:black )))) %action:proc{$} {Extra.Test} end
       lr(background:BGColor 
       glue:nw
