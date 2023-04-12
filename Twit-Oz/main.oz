@@ -158,6 +158,37 @@ define
       end
    end
 
+
+   fun {RemoveTwice File Acc} Res in
+      case File of nil then Acc=Acc|nil
+      [] H|T then 
+         if {List.member H Acc} then
+            Res={RemoveTwice T Acc}
+         else
+            Res={RemoveTwice T H|Acc}
+         end
+      end
+      Acc
+   end
+
+   fun {RemoveTwiceAll Files}
+      case Files of nil then nil
+      [] H|T then {RemoveTwice H nil}|{RemoveTwiceAll T}
+      end
+   end
+
+   fun {Fuse Files Acc}
+      case Files of nil then Acc
+      [] H|T then {Fuse T {List.append Acc H}}
+      end
+   end
+      
+   proc {TrainingAllWord Files} TrackWord SubFiles Clean in
+      Clean={Fuse {RemoveTwiceAll Files} nil}
+      {List.forAll Clean proc{$ Word} {TrainingOneWordFiles Word Files {Dictionary.new}} end}
+   end
+      
+
    fun {GetOs} OSType in
       OSType={Atom.toString {OS.getEnv 'OZHOME'}}
       if OSType.1 == 67 then %67 is the ASCII code for "C"
@@ -181,6 +212,7 @@ define
       else
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
+      {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
    end
