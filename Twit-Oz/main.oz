@@ -134,6 +134,7 @@ define
             Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
             Inc=1
             {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {TrainingOneWord Word T false Acc}
          else
             if {ByteString.toString H}==Word then
                {TrainingOneWord Word T true Acc}
