@@ -177,7 +177,7 @@ define
       else
          "Linux"
       end 
-   end
+   end      
 
 
    %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
@@ -227,6 +227,22 @@ define
       {FindBiggestDictHelper {Dictionary.keys Dic} Dic 0 nil}
    end
 
+   %Take a string and remove extra space and newline 
+   fun {RemoveNewLine String} CleanText in
+      case String
+      of nil then nil
+      [] H|T then
+         if {List.last String} == 10 then
+            {RemoveNewLine {List.take String {List.length String}-1}}
+         else if {List.last String} == 32 then
+               {RemoveNewLine {List.take String {List.length String}-1}}
+            else
+               {List.append String 32|nil} %Just add a space character so the split function works perfectly
+            end
+         end
+      end
+   end
+
    %Get the last input of an input of text
    fun {GetLast List Acc}
       case List of nil then Acc
@@ -235,9 +251,11 @@ define
    end
 
    %Function for pressing the "Result" button in the GUI
-   proc {PressSecond InputHandle OutputHandle} InputText Last Dict TempDict TempRes in
+   proc {PressSecond InputHandle OutputHandle} InputText CleanText Last Dict TempDict TempRes in
       {InputHandle get(1:InputText)}
-      Last={GetLast {Split {ByteString.make {String.toAtom InputText}} 0} {ByteString.make "NaN"}} %need to change NaN
+      CleanText={RemoveNewLine InputText}
+
+      Last={GetLast {Split {ByteString.make {String.toAtom CleanText}} 0} {ByteString.make "NaN"}} %need to change NaN
 
       %Check if the Pickle is already existing
       if {List.member {VirtualString.toString {ByteString.toString Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
@@ -251,7 +269,7 @@ define
 
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
-      {OutputHandle set(1:InputText#{FindBiggestDict Dict})}
+      {OutputHandle set(1:CleanText#{FindBiggestDict Dict})}
    end
 
 
