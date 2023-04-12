@@ -85,12 +85,6 @@ define
       end
    end
 
-   %fun {Split Input Track Acc}
-   %   case Input of nil then Acc
-   %   [] H|T then
-   %      if H==" " then
-   %end
-
    %Read a file. File is the name of the file
    fun {ReadFile File} F Res in
       F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
