@@ -69,13 +69,7 @@ define
 
    %Input: a bytestring and Track is the offset to start looking for the space character
    %Return: a list of bytestring
-   fun {Split Input Track} SearchChar in
-      %if {ByteString.elt Input {ByteString.length Input - 1}} != " " then
-       %  NewInput = {ByteString.concat Input Bytes.fromString(" ")}
-      %else
-      %   NewInput = Input
-      %end
-   
+   fun {Split Input Track} SearchChar in   
       SearchChar = {ByteString.strchr Input Track " ".1}
       if SearchChar == false then 
          nil % Inclure le dernier mot
