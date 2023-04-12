@@ -8,7 +8,10 @@ import
    Pickle
    Property
    Browser
+   Extra at 'extra.ozf'
 define
+   InputText
+   OutputText
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
 
@@ -33,7 +36,7 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    proc {Press} %était fun avant mais ca buggait
-      {Browse 'On y travaille'}
+      {PressSecond InputText OutputText}
    end
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -283,7 +286,7 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another in
+      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
@@ -314,7 +317,7 @@ define
 
       %iconbitmap:ICO
       lr(glue:nw
-      background:DarkerBGC
+      background:black
       menubutton(glue:nw foreground:black highlightcolor:DarkerBGC background:DarkerBGC text:"File" font:Font width:5
       menu:menu(background:DarkerBGC 
       tearoff:false
@@ -329,11 +332,11 @@ define
       menu:menu(background:DarkerBGC 
       tearoff:false
       command(text:"Newcommers"  foreground:black action:proc{$} {NewWin HelpMessage Desc POPUP R}end)
-      command(text:"About" foreground:black))))
+      command(text:"About" foreground:black )))) %action:proc{$} {Extra.Test} end
       lr(background:BGColor 
       glue:nw
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw insertbackground:black) 
-      button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$} {PressSecond InputText OutputText} end key:"Return"))
+      button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
