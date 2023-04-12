@@ -346,11 +346,10 @@ define
       menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"Help" font:Font width:5
       menu:menu(background:DarkerBGC 
       tearoff:false
-      %local Handle in
-      %   Handle = {New POPUP}
-      %   {Newcommers Handle}
-      %end
+      %local han in
+         %han = {New POPUP}
       command(text:"Newcommers"  foreground:black action:proc{$}{Newcommers POPUP} end)
+      %end
       command(text:"About" foreground:black )))) %action:proc{$} {Extra.Test} end
       lr(background:BGColor 
       glue:nw
