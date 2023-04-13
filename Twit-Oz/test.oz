@@ -1,28 +1,18 @@
-functor
-import 
-   QTk at 'x-oz://system/wp/QTk.ozf'
-   System
-   Application
-   Open
-   OS
-   Property
-   Browser
+declare 
+Ozmania='#2020Election\r\n.@seanhannity'|'#2020Election\r\nThe'|'#2020Election\r\n├ó\x80\x9CI'|'#2A.'|'#ISIS'|'#MAGA\r\nHighly'|'#MAGA\r\nI'|'#MAGA\r\nNews'|'#MAGA\r\nWow!'|nil
 
-define
-    proc{Main}
-        local 
-            M R
-            Desc=message(aspect:200
-                        init:"This is a message widget" 
-                        handle:M
-                        return:R
-                        )
-        in 
-            {{QTk.build td(Desc)} show}
-            {M set("Long text for a message widget")}
-            {Wait R} % R will be bound when the window is closed
-            %{Show {String.toAtom R}}
+fun {Clean Input}
+    case Input of nil then nil
+    [] H|T then 
+        if {Char.isCntrl H} then
+            {Clean T}
+        else
+            H|{Clean T}
         end
-    end 
-    {Main}
+    end
 end
+{Browse 'Hello'}
+{Browse Ozmania}
+{Browse {String.toAtom {Clean "#2020Election\r\n.@seanhannity"}}}
+Res={List.map Ozmania fun{$ Input} {Clean {Atom.toString Input}} end}
+{Browse {List.map Res String.toAtom}}

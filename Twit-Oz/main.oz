@@ -68,7 +68,7 @@ define
 
    %Input: a bytestring and Track is the offset to start looking for the space character
    %Return: a list of bytestring
-   fun {Split Input Track} SearchChar in   
+   fun {Split Input Track} SearchChar SearchNewLine in   
       SearchChar = {ByteString.strchr Input Track " ".1}
       if SearchChar == false then 
          nil % Inclure le dernier mot
@@ -77,10 +77,25 @@ define
       end
    end
 
+   fun {Clean Input}
+      case Input of nil then nil
+      [] H|T then 
+          if {Char.isCntrl H} then
+              32|{Clean T}
+          else 
+            if {Char.isAlpha H} then
+               H|{Clean T}
+            else
+               32|{Clean T}
+            end
+          end
+      end
+  end
+
    % Prends un String (pas un byteString) donc utilisable directement en lecture de fichier
    fun {SplitMultiple ArrayString}
       case ArrayString of nil then nil
-      [] H|T then {Split {ByteString.make H} 0}|{SplitMultiple T}
+      [] H|T then {Split {ByteString.make {Clean H}} 0}|{SplitMultiple T}
       end
    end
 
@@ -158,34 +173,64 @@ define
       end
    end
 
-
-   fun {RemoveTwice File Acc} Res in
-      case File of nil then Acc=Acc|nil
+   fun {OnlyAlpha List}
+      case List of nil then nil
       [] H|T then 
-         if {List.member H Acc} then
-            Res={RemoveTwice T Acc}
+         %{Browse {Atom.toString H}}
+         %{Browse {List.filter {Atom.toString H} Char.isAlpha}} %h
+         {List.filter {Atom.toString H} Char.isAlpha}|{OnlyAlpha T}
+      end
+   end
+
+
+   proc {RemoveTwice File Dict} Res in
+      case File of nil then skip
+      [] H|T then
+         if {Dictionary.member Dict {String.toAtom {ByteString.toString H}}} then
+            {RemoveTwice T Dict}
          else
-            Res={RemoveTwice T H|Acc}
+            if {List.member 39 {ByteString.toString H}} then
+               {Browse true}
+            else
+               {Dictionary.put Dict {String.toAtom {ByteString.toString H}} 1}
+               {RemoveTwice T Dict}
+            end
          end
       end
-      Acc
    end
 
-   fun {RemoveTwiceAll Files}
+   %Takes a list of bytestring
+   fun {Fuse Files}
       case Files of nil then nil
-      [] H|T then {RemoveTwice H nil}|{RemoveTwiceAll T}
+      [] H|T then {List.append H {Fuse T}}
       end
    end
 
-   fun {Fuse Files Acc}
-      case Files of nil then Acc
-      [] H|T then {Fuse T {List.append Acc H}}
-      end
+   fun {RemoveTwiceAll Files} Clean Res Finish in
+      {Browse 'Fusing'}
+      {Browse "'"}
+      Finish={SplitMultiple Files}
+      Clean={Fuse Finish}
+      {Browse {List.length Clean}}
+
+
+      Res={Dictionary.new}
+      {RemoveTwice Clean Res}
+      {Browse {Dictionary.keys Res}}
+
+      {List.drop {Dictionary.keys Res} 1}
    end
+
       
-   proc {TrainingAllWord Files} TrackWord SubFiles Clean in
-      Clean={Fuse {RemoveTwiceAll Files} nil}
-      {List.forAll Clean proc{$ Word} {TrainingOneWordFiles Word Files {Dictionary.new}} end}
+   proc {TrainingAllWord Files} TrackWord SubFiles Clean Splited in
+      Splited={SplitMultiple Files}
+      Clean={RemoveTwiceAll Files}
+      
+      %Remove Issue with Keys
+      {List.forAll Clean proc{$ Word} {TrainingOneWordFiles {Atom.toString Word} Splited {Dictionary.new}} end}
+
+      %Splited={SplitMultiple Files}
+      %{List.forAll {List.drop {Dictionary.keys Clean} 1} proc{$ Word} {Browse Word} {TrainingOneWordFiles Word Splited {Dictionary.new}} end}
    end
       
 
@@ -212,6 +257,8 @@ define
       else
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
+
+      {Browse 'Updating'}
       {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
@@ -284,6 +331,7 @@ define
       else
          Dict={NewDictionary}
          TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
+         {Browse {ByteString.toString Last}}
          {TrainingOneWordFiles {ByteString.toString Last} TempRes Dict}
       end
 
