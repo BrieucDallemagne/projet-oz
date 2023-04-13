@@ -77,6 +77,8 @@ define
       end
    end
 
+   %Remove control character (\r, \n,...) and other
+   %Input: a VS
    fun {Clean Input}
       case Input of nil then nil
       [] H|T then 
@@ -173,6 +175,7 @@ define
       end
    end
 
+   % Acept only alpha character
    fun {OnlyAlpha List}
       case List of nil then nil
       [] H|T then 
@@ -182,7 +185,8 @@ define
       end
    end
 
-
+   % Avoiding to pick twice the same word
+   % File: Openmultiple files    Dict: Dict to store everything
    proc {RemoveTwice File Dict} Res in
       case File of nil then skip
       [] H|T then
@@ -207,21 +211,17 @@ define
    end
 
    fun {RemoveTwiceAll Files} Clean Res Finish in
-      {Browse 'Fusing'}
-      {Browse "'"}
       Finish={SplitMultiple Files}
       Clean={Fuse Finish}
-      {Browse {List.length Clean}}
-
 
       Res={Dictionary.new}
       {RemoveTwice Clean Res}
-      {Browse {Dictionary.keys Res}}
 
       {List.drop {Dictionary.keys Res} 1}
    end
 
-      
+   %Function to create a new Database of words
+   %Files: openmultiple result of a file
    proc {TrainingAllWord Files} TrackWord SubFiles Clean Splited in
       Splited={SplitMultiple Files}
       Clean={RemoveTwiceAll Files}
@@ -233,7 +233,7 @@ define
       %{List.forAll {List.drop {Dictionary.keys Clean} 1} proc{$ Word} {Browse Word} {TrainingOneWordFiles Word Splited {Dictionary.new}} end}
    end
       
-
+   %To get the current OS
    fun {GetOs} OSType in
       OSType={Atom.toString {OS.getEnv 'OZHOME'}}
       if OSType.1 == 67 then %67 is the ASCII code for "C"
@@ -246,6 +246,7 @@ define
 
    %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
    proc {UpdateDatabase Handle} Test PidI StatusT OSType Info in
+      {Handle set(1:"Démarrage du procéssus cela peut prendre quelques minutes" foreground:red)}
       OSType={GetOs}
       Test={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
