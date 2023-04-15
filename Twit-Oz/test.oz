@@ -1,6 +1,7 @@
 declare 
 List1=["a" "b" "c" "d"]
 
+%Use {ClusterMaker}
 fun {SubCluster Input Start Num} Res in
     if {List.length Input}<Start+Num then
         nil
@@ -25,6 +26,10 @@ fun {ClusterMaker Input Start Num} Sub in
     end
 end
 
-Tot={ClusterMaker List1 0 3}
-{Browse Tot}
-{Browse {List.length Tot}}
+fun {Mashing Input}
+    case Input of nil then ""
+    [] H|T then {Browse {VirtualString.is H}} H#{Mashing T}
+    end
+end
+
+{Browse {VirtualString.toAtom {Mashing List1}}}

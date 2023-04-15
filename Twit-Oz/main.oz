@@ -14,6 +14,7 @@ define
    OutputText
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
+   N=2 %set the size of Ngram
    %%% Pour ouvrir les fichiers
    class TextFile
       from Open.file Open.text
@@ -218,7 +219,7 @@ define
          if Flag then
             Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
             Inc=1
-            {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {Dictionary.put Acc {String.toAtom {ByteString.toString {List.last}}} Retrieve+Inc} %1 needs to be modified just meant for testing
             {TrainingOneWord Word T false Acc}
          else
             if {ByteString.toString H}==Word then
@@ -230,17 +231,47 @@ define
       end
    end
 
+   %Take a List and "mash" them together
+   %ex: [a b c d] --> abcd
+   fun {Mashing Input}
+      case Input of nil then ""
+      [] H|T then H#{Mashing T}
+      end
+   end
+
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
    proc {TrainingWordFiles Word Files Acc} Size NewAcc ByteFiles in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
+         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom {Mashing Word}} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then 
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
       end
+   end
+
+   proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes in
+      %To get the user's input
+      {InputHandle get(1:InputText)}
+      CleanText1={Split {Clean InputText}}
+      CleanText={ClusterMaker CleanText1 0 N}
+      Last={List.last CleanText}
+
+      %Check if the Pickle is already existing
+      if {List.member {VirtualString.toString {ByteString.toString {Mashing Last}}#".ozp"} {OS.getDir "Pickle/Word"}} then
+         TempDict={Pickle.load "Pickle/Word/"#{String.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+         Dict={Record.toDictionary TempDict}
+      else
+         Dict={NewDictionary}
+         TempRes={ClusterMaker {SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} 0 N} %To be clean
+         {TrainingWordFiles Last TempRes Dict}
+      end
+
+      %Add the true Pickle loading with concatenation
+      %create a search inside a tuple
+      {OutputHandle set(1:CleanText#{FindBiggestDict Dict})}
    end
 
    % Acept only alpha character
