@@ -70,12 +70,20 @@ define
    %Return: a list of bytestring
    fun {Split Input Track} SearchChar SearchNewLine in   
       SearchChar = {ByteString.strchr Input Track " ".1}
-      if SearchChar == false then 
-         nil % Inclure le dernier mot
+      if SearchChar == false then %When we are at the end of the string
+          if {ByteString.length Input}==Track then %If the last one is a space
+              nil
+          else %Include last word and finish
+              {ByteString.slice Input Track {ByteString.length Input}}|nil
+          end
       else
-         {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}
+          if SearchChar==Track then %When there is multiple spaces
+              {Split Input SearchChar+1}
+          else %Slicing the input
+              {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}    
+          end
       end
-   end
+  end
 
    %Remove control character (\r, \n,...) and other
    %Input: a VS
@@ -92,7 +100,7 @@ define
             end
           end
       end
-  end
+  end  
 
    % Prends un String (pas un byteString) donc utilisable directement en lecture de fichier
    fun {SplitMultiple ArrayString}
@@ -175,6 +183,41 @@ define
       end
    end
 
+      %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
+   %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
+   proc {TrainingWord Word File Flag Acc} Size Retrieve Inc in
+      Size=NumberWord
+
+      case File of nil then skip
+      [] H|T then
+         if Flag then
+            Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            Inc=1
+            {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {TrainingOneWord Word T false Acc}
+         else
+            if {ByteString.toString H}==Word then
+               {TrainingOneWord Word T true Acc}
+            else
+               {TrainingOneWord Word T Flag Acc}
+            end
+         end
+      end
+   end
+
+   %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
+   proc {TrainingWordFiles Word Files Acc} Size NewAcc ByteFiles in
+      Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
+      
+      case Files of nil then 
+         %Because Dictionnary is not supported by pickle in Oz
+         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
+      [] H|T then 
+         {TrainingOneWord Word H false Acc} 
+         {TrainingOneWordFiles Word T Acc}
+      end
+   end
+
    % Acept only alpha character
    fun {OnlyAlpha List}
       case List of nil then nil
@@ -203,10 +246,15 @@ define
       end
    end
 
-   %Takes a list of bytestring
+   %Takes a list of list of bytestring and make it into a list of bytestring
    fun {Fuse Files}
       case Files of nil then nil
-      [] H|T then {List.append H {Fuse T}}
+      [] H|T then 
+          if {List.is H} then
+              {List.append H {Fuse T}}
+          else
+              {List.append H|nil {Fuse T}}
+          end
       end
    end
 
@@ -320,9 +368,9 @@ define
 
    %Function for pressing the "Result" button in the GUI
    proc {PressSecond InputHandle OutputHandle} InputText CleanText Last Dict TempDict TempRes in
+      %To get the user's input
       {InputHandle get(1:InputText)}
-      CleanText={RemoveNewLine InputText}
-
+      CleanText={Clean InputText}
       Last={GetLast {Split {ByteString.make {String.toAtom CleanText}} 0} {ByteString.make "NaN"}} %need to change NaN
 
       %Check if the Pickle is already existing
@@ -332,7 +380,6 @@ define
       else
          Dict={NewDictionary}
          TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-         {Browse {ByteString.toString Last}}
          {TrainingOneWordFiles {ByteString.toString Last} TempRes Dict}
       end
 
