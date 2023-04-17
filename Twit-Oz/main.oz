@@ -225,15 +225,15 @@ define
             Inc=1
             {Browse {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}}}
             {Browse 'lkmfjdsqmlkfj'}
-            %{Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
-            {TrainingOneWord Word T false Acc}
+            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing{List.map Word ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {TrainingWord Word T false Acc}
          else
-            %if {ByteString.toString H}==Word then
-            %   {TrainingOneWord Word T true Acc}
-            %else
-            %   {TrainingOneWord Word T Flag Acc}
-            %end
-            {Browse 'jsp'}
+            if H==Word then
+               {Browse 'égal'}
+               {TrainingWord Word T true Acc}
+            else
+               {TrainingWord Word T Flag Acc}
+            end
          end
       end
    end
@@ -255,7 +255,7 @@ define
          Mashed={String.toAtom {VirtualString.toString {Mashing{List.map Word ByteString.toString}}}}
          {Pickle.saveWithHeader {Dictionary.toRecord Mashed Acc} "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then
-         %{TrainingWord Word H false Acc} 
+         {TrainingWord Word H false Acc} 
          {TrainingWordFiles Word T Acc}
       end
    end
@@ -269,7 +269,7 @@ define
 
       %Check if the Pickle is already existing
       if {List.member {VirtualString.toString {ByteString.toString {Mashing Last}}#".ozp"} {OS.getDir "Pickle/Word"}} then
-         TempDict={Pickle.load "Pickle/Word/"#{String.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+         TempDict={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
          Dict={Record.toDictionary TempDict}
       else
          {Browse 'creating'}

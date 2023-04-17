@@ -1,6 +1,7 @@
 declare 
 Num=3
 List1=[{ByteString.make 'Hello'} {ByteString.make 'World'}]
+List2=[{ByteString.make 'Hello'} {ByteString.make 'World'}]
 
 %Use {ClusterMaker}
 fun {SubCluster Input Start Num} Res in
@@ -39,6 +40,4 @@ fun {Mashing Input}
     end
  end
 
-{Browse 'Résultat'}
-{Browse {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}}
-{Browse {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}}}
+{Browse List1==List2}
