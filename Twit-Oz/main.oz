@@ -247,16 +247,16 @@ define
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   proc {TrainingWordFiles Word Files Acc} Size NewAcc ByteFiles in
+   proc {TrainingWordFiles Word Files Acc} Size NewAcc ByteFiles Mashed in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom {Mashing Word}} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
+         Mashed={String.toAtom {VirtualString.toString {Mashing{List.map Word ByteString.toString}}}}
+         {Pickle.saveWithHeader {Dictionary.toRecord Mashed Acc} "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then
-         {Browse 'Making'}
-         {TrainingOneWord Word H false Acc} 
-         {TrainingOneWordFiles Word T Acc}
+         %{TrainingWord Word H false Acc} 
+         {TrainingWordFiles Word T Acc}
       end
    end
 
@@ -275,7 +275,6 @@ define
          {Browse 'creating'}
          Dict={NewDictionary}
          TempRes={ClusterMaker {SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} 0 N} %To be clean
-         {Browse TempRes}
          {TrainingWordFiles Last TempRes Dict}
       end
 
