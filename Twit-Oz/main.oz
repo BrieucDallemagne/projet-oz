@@ -221,11 +221,11 @@ define
       case File of nil then skip
       [] H|T then
          if Flag then
-            Retrieve={Dictionary.condGet Acc {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}} 0}
+            Retrieve={Dictionary.condGet Acc {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}} 0}
             Inc=1
             {Browse 'lkmfjdsqmlkfj'}
-            {Browse {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}}}
-            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {Browse {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}}}
+            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
             {Browse 'Put in dic'}
             {TrainingWord Word T false Acc}
          else
@@ -240,15 +240,15 @@ define
    end
 
    %Take a List and "mash" them together
-   %ex: [a b c d] --> abcd
+   %ex: [a b c d] --> a_b_c_d
    fun {Mashing Input}
       case Input of nil then ""
-      [] H|T then H#{Mashing T}
+      [] H|T then H#"_"#{Mashing T}
       end
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   proc {TrainingWordFiles Word Files Acc} Size NewAcc ByteFiles Mashed in
+   proc {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
       
       case Files of nil then 
@@ -257,11 +257,11 @@ define
          {Pickle.saveWithHeader {Dictionary.toRecord Mashed Acc} "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then
          {TrainingWord Word H false Acc} 
-         {TrainingWordFiles Word T Acc}
+         {TrainingWordFiles Word T Acc N}
       end
    end
 
-   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes in
+   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder in
       %To get the user's input
       {InputHandle get(1:InputText)}
       CleanText1={Split {ByteString.make {Clean InputText}} 0}
@@ -278,14 +278,18 @@ define
          Dict={NewDictionary}
          TempRes={List.map {SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O}{ClusterMaker O 0 N} end} %To be clean
          {Browse {List.length TempRes}}
-         {TrainingWordFiles Last TempRes Dict}
+         {TrainingWordFiles Last TempRes Dict N}
       end
 
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
-      {Browse {VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}}}
-      {Browse {Dictionary.get Dict {FindBiggestDict Dict}}}
-      {OutputHandle set(1:{Clean InputText}#{VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}})} %{FindBiggestDict Dict}
+      case {FindBiggestDict Dict} of nil then
+         {TrainingWordFiles Last TempRes Dict N-1}
+         PlaceHolder="OOOOPSS"
+      else
+         PlaceHolder={List.last {String.tokens {VirtualString.toString {FindBiggestDict Dict}} &_ }}
+      end
+      {OutputHandle set(1:{Clean InputText}#PlaceHolder)} %{FindBiggestDict Dict}
    end
 
    % Acept only alpha character
