@@ -221,11 +221,12 @@ define
       case File of nil then skip
       [] H|T then
          if Flag then
-            %Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            Retrieve={Dictionary.condGet Acc {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}} 0}
             Inc=1
-            {Browse {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}}}
             {Browse 'lkmfjdsqmlkfj'}
-            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing{List.map Word ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {Browse {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}}}
+            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing {List.map Word ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {Browse 'Put in dic'}
             {TrainingWord Word T false Acc}
          else
             if H==Word then
@@ -269,18 +270,21 @@ define
 
       %Check if the Pickle is already existing
       if {List.member {VirtualString.toString {ByteString.toString {Mashing Last}}#".ozp"} {OS.getDir "Pickle/Word"}} then
+         {Browse 'Exist'}
          TempDict={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
          Dict={Record.toDictionary TempDict}
       else
          {Browse 'creating'}
          Dict={NewDictionary}
-         TempRes={ClusterMaker {SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} 0 N} %To be clean
+         TempRes={List.map {SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O}{ClusterMaker O 0 N} end} %To be clean
+         {Browse {List.length TempRes}}
          {TrainingWordFiles Last TempRes Dict}
       end
 
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
       {Browse {VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}}}
+      {Browse {Dictionary.get Dict {FindBiggestDict Dict}}}
       {OutputHandle set(1:{Clean InputText}#{VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}})} %{FindBiggestDict Dict}
    end
 

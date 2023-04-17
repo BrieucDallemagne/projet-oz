@@ -4,7 +4,7 @@ Quant=0
 cd tweets
 for n in {1..200};
 do
-    cat part_$n.txt | grep 'I am'
+    cat part_$n.txt | grep 'it is'
     Val=$(cat part_$n.txt | wc --words)
     Quant=$(($Val + $Quant))
 done
