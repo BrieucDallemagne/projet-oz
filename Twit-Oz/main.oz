@@ -284,7 +284,8 @@ define
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
       case {FindBiggestDict Dict} of nil then
-         {TrainingWordFiles Last TempRes Dict N-1}
+         {TrainingWordFiles Last {List.map {SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O}{ClusterMaker O 0 N-1} end} Dict N-1}
+         
          PlaceHolder="OOOOPSS"
       else
          PlaceHolder={List.last {String.tokens {VirtualString.toString {FindBiggestDict Dict}} &_ }}
