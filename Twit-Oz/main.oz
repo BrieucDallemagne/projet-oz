@@ -150,16 +150,18 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   proc {TrainingOneWord Word File Flag Acc} Size Retrieve Inc in
+   proc {TrainingOneWord Word File Flag Acc} Size Retrieve Inc TempKey TempVal in
       Size=NumberWord
 
       case File of nil then skip
       [] H|T then
          if Flag then
-            Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            Retrieve={Value.condSelect Acc {String.toAtom {ByteString.toString H}} 0}
             Inc=1
-            {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
-            {TrainingOneWord Word T false Acc}
+            TempKey={String.toAtom {ByteString.toString H}} 
+            TempVal=b( TempKey : Retrieve+1)
+             
+            {TrainingOneWord Word T false {Record.adjoin Acc TempVal}}
          else
             if {ByteString.toString H}==Word then
                {TrainingOneWord Word T true Acc}
@@ -176,7 +178,7 @@ define
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
+         {Pickle.saveWithHeader Acc "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then 
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
@@ -210,16 +212,18 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   proc {TrainingWord Word File Flag Acc} Size Retrieve Inc in
+   proc {TrainingWord Word File Flag Acc} Size Retrieve Inc TempTuple TempVal TempKey in
       Size=NumberWord
 
       case File of nil then skip
       [] H|T then
          if Flag then
-            Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            Retrieve={Value.condSelect Acc {String.toAtom {ByteString.toString H}} 0}
             Inc=1
-            {Dictionary.put Acc {String.toAtom {ByteString.toString H}} Retrieve+Inc} %1 needs to be modified just meant for testing
-            {TrainingOneWord Word T false Acc}
+            TempKey={String.toAtom {ByteString.toString H}}
+            TempVal=TempTuple(TempKey:Retrieve+Inc)
+             
+            {TrainingOneWord Word T false {Record.adjoin Acc TempVal}}
          else
             if {ByteString.toString H}==Word then
                {TrainingOneWord Word T true Acc}
@@ -236,7 +240,7 @@ define
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom Word} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
+         {Pickle.saveWithHeader Acc "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
       [] H|T then 
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
@@ -352,20 +356,22 @@ define
    end
 
    %Just a HELPER procedure to find the biggest value.  YOU SHOULD CALL {FingBiggestDic Dic} RATHER
-   fun {FindBiggestDictHelper List Dic Biggest Name}
+   %List: the result of toListInd on a record    Biggest: Higher occurences    Name: Name of the key
+   fun {FindBiggestDictHelper List Biggest Name}
       case List of nil then Name
       [] H|T then
-         if {Dictionary.get Dic H} > Biggest then
-            {FindBiggestDictHelper T Dic {Dictionary.get Dic H} H}
+         if H.2 > Biggest then
+            {FindBiggestDictHelper T H.2 H.1}
          else
-            {FindBiggestDictHelper T Dic Biggest Name}
+            {FindBiggestDictHelper T Biggest Name}
          end
       end
    end
 
    %Find the key with the highest number
+   %Dic is a Record
    fun {FindBiggestDict Dic}
-      {FindBiggestDictHelper {Dictionary.keys Dic} Dic 0 nil}
+      {FindBiggestDictHelper {Record.toListInd Dic} 0 nil}
    end
 
    %Take a string and remove extra space and newline 
@@ -400,10 +406,9 @@ define
 
       %Check if the Pickle is already existing
       if {List.member {VirtualString.toString {ByteString.toString Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-         TempDict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} 
-         Dict={Record.toDictionary TempDict}
+         Dict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} 
       else
-         Dict={NewDictionary}
+         Dict=a()
          TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
          {TrainingOneWordFiles {ByteString.toString Last} TempRes Dict}
       end

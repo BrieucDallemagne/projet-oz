@@ -1,30 +1,22 @@
 declare 
-List1=["a" "b" "c" "d"]
+Temp={String.toAtom {ByteString.toString {ByteString.make "Test"}}}
+Test=a(Temp:5 'mama':4 'aml':1)
 
-fun {SubCluster Input Start Num} Res in
-    if {List.length Input}<Start+Num then
-        nil
-    else
-        Res={List.drop Input Start}
-        {List.take Res Num}
-    end
-end
-
-%With Start being 0, split a List of word into packet of Num size of word -->[a b c d] --> [[a b c] [b c d]]
-%Input: a List  Start: Where to Start in the List    Num: The size of each subarray
-fun {ClusterMaker Input Start Num} Sub in
-    case Input of nil then nil
+   %Just a HELPER procedure to find the biggest value.  YOU SHOULD CALL {FingBiggestDic Dic} RATHER
+   fun {FindBiggestDictHelper List Biggest Name}
+    case List of nil then Name
     [] H|T then
-        Sub={SubCluster Input Start Num}
-        {Browse Sub}
-        if Sub==nil then
-            nil
-        else
-            Sub|{ClusterMaker Input Start+1 Num}
-        end
+       if H.2 > Biggest then
+          {FindBiggestDictHelper T H.2 H.1}
+       else
+          {FindBiggestDictHelper T Biggest Name}
+       end
     end
-end
+ end
 
-Tot={ClusterMaker List1 0 3}
-{Browse Tot}
-{Browse {List.length Tot}}
+ %Find the key with the highest number
+ fun {FindBiggestDict Dic}
+    {FindBiggestDictHelper {Record.toListInd Dic} 0 nil}
+ end
+
+ {Browse {FindBiggestDict Test}}
