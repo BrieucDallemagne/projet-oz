@@ -1,5 +1,6 @@
-# projet-oz 
+<img src="https://github.com/BrieucDallemagne/projet-oz/actions/workflows/main.yml/badge.svg">
 
+# projet-oz 
 - [projet-oz](#projet-oz)
   - [Objectif](#objectif)
   - [Impératif](#impératif)
