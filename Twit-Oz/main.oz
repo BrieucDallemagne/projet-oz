@@ -36,7 +36,7 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    proc {Press} %était fun avant mais ca buggait
-      {PressSecond InputText OutputText}
+      {PressNgram InputText OutputText}
    end
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -186,21 +186,24 @@ define
 
    %Use {ClusterMaker}
    fun {SubCluster Input Start Num} Res in
-      if {List.length Input}<Start+Num then
-         nil
+      if {List.length Input} < Num then
+         {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
       else
-         Res={List.drop Input Start}
-         {List.take Res Num}
+         if {List.length Input}<Start+Num then
+            nil
+         else
+            Res={List.drop Input Start}
+            {List.take Res Num}
+         end
       end
    end
 
    %With Start being 0, split a List of word into packet of Num size of word -->[a b c d] --> [[a b c] [b c d]]
-   %Input: a List  Start: Where to Start in the List    Num: The size of each subarray
+   %Input: a List of ByteString  Start: Where to Start in the List    Num: The size of each subarray
    fun {ClusterMaker Input Start Num} Sub in
       case Input of nil then nil
       [] H|T then
          Sub={SubCluster Input Start Num}
-         {Browse Sub}
          if Sub==nil then
             nil
          else
@@ -214,19 +217,23 @@ define
    proc {TrainingWord Word File Flag Acc} Size Retrieve Inc in
       Size=NumberWord
 
+
       case File of nil then skip
       [] H|T then
          if Flag then
-            Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
+            %Retrieve={Dictionary.condGet Acc {String.toAtom {ByteString.toString H}} 0}
             Inc=1
-            {Dictionary.put Acc {String.toAtom {ByteString.toString {List.last}}} Retrieve+Inc} %1 needs to be modified just meant for testing
+            {Browse {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}}}
+            {Browse 'lkmfjdsqmlkfj'}
+            %{Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing{List.map [{ByteString.make "test"} {ByteString.make "test"}] ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
             {TrainingOneWord Word T false Acc}
          else
-            if {ByteString.toString H}==Word then
-               {TrainingOneWord Word T true Acc}
-            else
-               {TrainingOneWord Word T Flag Acc}
-            end
+            %if {ByteString.toString H}==Word then
+            %   {TrainingOneWord Word T true Acc}
+            %else
+            %   {TrainingOneWord Word T Flag Acc}
+            %end
+            {Browse 'jsp'}
          end
       end
    end
@@ -246,16 +253,17 @@ define
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
          {Pickle.saveWithHeader {Dictionary.toRecord {String.toAtom {Mashing Word}} Acc} "Pickle/Word/"#Word#".ozp" "Pour "#Word 0} %It uses a false compression take 4kb on disk for 24bit
-      [] H|T then 
+      [] H|T then
+         {Browse 'Making'}
          {TrainingOneWord Word H false Acc} 
          {TrainingOneWordFiles Word T Acc}
       end
    end
 
-   proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes in
+   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes in
       %To get the user's input
       {InputHandle get(1:InputText)}
-      CleanText1={Split {Clean InputText}}
+      CleanText1={Split {ByteString.make {Clean InputText}} 0}
       CleanText={ClusterMaker CleanText1 0 N}
       Last={List.last CleanText}
 
@@ -264,14 +272,17 @@ define
          TempDict={Pickle.load "Pickle/Word/"#{String.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
          Dict={Record.toDictionary TempDict}
       else
+         {Browse 'creating'}
          Dict={NewDictionary}
          TempRes={ClusterMaker {SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} 0 N} %To be clean
+         {Browse TempRes}
          {TrainingWordFiles Last TempRes Dict}
       end
 
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
-      {OutputHandle set(1:CleanText#{FindBiggestDict Dict})}
+      {Browse {VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}}}
+      {OutputHandle set(1:{Clean InputText}#{VirtualString.toString {Mashing ['ceci' 'est' 'un' 'test']}})} %{FindBiggestDict Dict}
    end
 
    % Acept only alpha character
