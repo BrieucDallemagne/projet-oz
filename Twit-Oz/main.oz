@@ -14,7 +14,7 @@ define
    OutputText
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
-   N=2 %set the size of Ngram
+   N=3 %set the size of Ngram
 
 
    %%% Pour ouvrir les fichiers
