@@ -2,9 +2,9 @@
 Quant=0
 
 cd tweets
-for n in {1..200};
+for n in {1..208};
 do
-    cat part_$n.txt | grep \r\nEveryone\'s
+    cat part_$n.txt | grep 'must go'
     Val=$(cat part_$n.txt | wc --words)
     Quant=$(($Val + $Quant))
 done
