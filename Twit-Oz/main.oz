@@ -15,6 +15,9 @@ define
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
    N=2 %set the size of Ngram
+   Parsed=nil %Contains the parsed documents
+
+
    %%% Pour ouvrir les fichiers
    class TextFile
       from Open.file Open.text
@@ -67,47 +70,31 @@ define
       %{Wait Return}  Return will be bound when the window is closed
    end
 
-   %Input: a bytestring and Track is the offset to start looking for the space character
-   %Return: a list of bytestring
-   fun {Split Input Track} SearchChar SearchNewLine in   
-      SearchChar = {ByteString.strchr Input Track " ".1}
-      if SearchChar == false then %When we are at the end of the string
-          if {ByteString.length Input}==Track then %If the last one is a space
-              nil
-          else %Include last word and finish
-              {ByteString.slice Input Track {ByteString.length Input}}|nil
-          end
-      else
-          if SearchChar==Track then %When there is multiple spaces
-              {Split Input SearchChar+1}
-          else %Slicing the input
-              {ByteString.slice Input Track SearchChar}|{Split Input SearchChar+1}    
-          end
-      end
-  end
-
-   %Remove control character (\r, \n,...) and other
-   %Input: a VS
+   %Takes a String and remove all non Ascii Character
    fun {Clean Input}
       case Input of nil then nil
       [] H|T then 
-          if {Char.isCntrl H} then
-              32|{Clean T}
-          else 
+         if {Char.isCntrl H} then
+            32|{Clean T}
+         else 
             if {Char.isAlpha H} then
                H|{Clean T}
             else
                32|{Clean T}
             end
-          end
+         end
       end
-  end  
+   end
 
-   % Prends un String (pas un byteString) donc utilisable directement en lecture de fichier
-   fun {SplitMultiple ArrayString}
-      case ArrayString of nil then nil
-      [] H|T then {Split {ByteString.make {Clean H}} 0}|{SplitMultiple T}
-      end
+   %Takes a String, clean and put each word in a list
+      fun {Split Input}
+         {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
+   end
+   
+   fun {SplitMultiple ListInput}
+         case ListInput of nil then nil
+         [] H|T then {Split H}|{SplitMultiple T}
+         end
    end
 
    %Read a file. File is the name of the file
@@ -131,7 +118,7 @@ define
 
    %Prends en entrée le contenu d'un fichier (un gros string) et retourne le nombre de mot
    fun {CountWords File} Count in
-      {List.length {Split {ByteString.make {String.toAtom File}} 0} Count}
+      {List.length {Split File} Count}
       Count+1
    end
 
@@ -214,28 +201,25 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   proc {TrainingWord Word File Flag Acc} Size Retrieve Inc in
-      Size=NumberWord
+   fun {TrainingWord Word File Acc Track} Size Retrieve Inc Name in
 
 
-      case File of nil then skip
+      case File of nil then 
+         Acc
       [] H|T then
-         if Flag then
-            Retrieve={Dictionary.condGet Acc {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}} 0}
-            Inc=1
-            {Browse 'lkmfjdsqmlkfj'}
-            {Browse {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}}}
-            {Dictionary.put Acc {String.toAtom {VirtualString.toString {Mashing {List.map H ByteString.toString}}}} Retrieve+Inc} %1 needs to be modified just meant for testing
-            {Browse 'Put in dic'}
-            {TrainingWord Word T false Acc}
+         if Track>{List.length Word} then
+            Name={String.toAtom H}
+            Retrieve={Value.condSelect Acc Name 0}+1
+            {TrainingWord Word T {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
-            if H==Word then
-               {Browse 'égal'}
-               {TrainingWord Word T true Acc}
+            if H=={List.nth Word Track} then
+                  {Browse H}
+                  {TrainingWord Word T Acc Track+1}
             else
-               {TrainingWord Word T Flag Acc}
+                  {TrainingWord Word T Acc 1}
             end
          end
+
       end
    end
 
@@ -248,47 +232,72 @@ define
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   proc {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
+   fun {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
-      
+
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         Mashed={String.toAtom {VirtualString.toString {Mashing{List.map Word ByteString.toString}}}}
-         {Pickle.saveWithHeader {Dictionary.toRecord Mashed Acc} "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
+         Mashed={VirtualString.toString {Mashing Word}}
+         {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
+         {Browse 'Finished'}
+         Acc
       [] H|T then
-         {TrainingWord Word H false Acc} 
-         {TrainingWordFiles Word T Acc N}
+         NewAcc={TrainingWord Word H Acc 1} 
+         {Browse 'Next'}
+         {TrainingWordFiles Word T NewAcc N}
       end
    end
 
-   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder in
+   fun {FindBiggestHelper List Name Max}
+      case List of nil then Name
+      [] H|T then
+          if H.2 > Max then
+              {FindBiggestHelper T H.1 H.2}
+          else
+              {FindBiggestHelper T Name Max}
+          end
+      end
+  end
+  
+   %Take a Record and return the biggest key for its value
+   fun {FindBiggest Input} Temp in
+      {FindBiggestHelper {Record.toListInd Input} nil 0}
+   end
+
+   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
       %To get the user's input
       {InputHandle get(1:InputText)}
-      CleanText1={Split {ByteString.make {Clean InputText}} 0}
+      CleanText1={Split InputText}
       CleanText={ClusterMaker CleanText1 0 N}
       Last={List.last CleanText}
 
+      %Read all the Files
+      case Parsed of nil then
+         {Browse 'We need to read the files'}
+         {Browse {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}}
+         {Delay 1000}
+         Parsed={SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}}
+         {Browse Parsed}
+      [] H|T then
+         {Browse 'Files are already loaded'}
+      end
+
       %Check if the Pickle is already existing
-      if {List.member {VirtualString.toString {ByteString.toString {Mashing Last}}#".ozp"} {OS.getDir "Pickle/Word"}} then
+      if {List.member {Mashing Last}#".ozp" {OS.getDir "Pickle/Word"}} then
          {Browse 'Exist'}
-         TempDict={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
-         Dict={Record.toDictionary TempDict}
+         WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
       else
-         {Browse 'creating'}
-         Dict={NewDictionary}
-         TempRes={List.map {SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O}{ClusterMaker O 0 N} end} %To be clean
-         {Browse {List.length TempRes}}
-         {TrainingWordFiles Last TempRes Dict N}
+         {Browse 'Working'}
+         TempDict=a()
+         WordRecord={TrainingWordFiles Last Parsed TempDict N}
       end
 
       %Add the true Pickle loading with concatenation
       %create a search inside a tuple
-      case {FindBiggestDict Dict} of nil then
-         {TrainingWordFiles Last {List.map {SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O}{ClusterMaker O 0 N-1} end} Dict N-1}
-         
+      case {FindBiggest WordRecord} of nil then         
          PlaceHolder="OOOOPSS"
       else
-         PlaceHolder={List.last {String.tokens {VirtualString.toString {FindBiggestDict Dict}} &_ }}
+         PlaceHolder={FindBiggest WordRecord}
       end
       {OutputHandle set(1:{Clean InputText}#PlaceHolder)} %{FindBiggestDict Dict}
    end
@@ -441,27 +450,6 @@ define
       end
    end
 
-   %Function for pressing the "Result" button in the GUI
-   proc {PressSecond InputHandle OutputHandle} InputText CleanText Last Dict TempDict TempRes in
-      %To get the user's input
-      {InputHandle get(1:InputText)}
-      CleanText={Clean InputText}
-      Last={GetLast {Split {ByteString.make {String.toAtom CleanText}} 0} {ByteString.make "NaN"}} %need to change NaN
-
-      %Check if the Pickle is already existing
-      if {List.member {VirtualString.toString {ByteString.toString Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-         TempDict={Pickle.load "Pickle/Word/"#{String.toAtom{ByteString.toString Last}}#".ozp"} 
-         Dict={Record.toDictionary TempDict}
-      else
-         Dict={NewDictionary}
-         TempRes={SplitMultiple {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-         {TrainingOneWordFiles {ByteString.toString Last} TempRes Dict}
-      end
-
-      %Add the true Pickle loading with concatenation
-      %create a search inside a tuple
-      {OutputHandle set(1:CleanText#{FindBiggestDict Dict})}
-   end
 
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
