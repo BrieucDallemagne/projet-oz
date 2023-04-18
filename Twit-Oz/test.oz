@@ -3,7 +3,7 @@ List1="Hello\r my namé is   ç&§ ° How are you?  "
 NumberWord=2
 N=2
 Parsed=["this" "another" "test" "this" "is" "the" "test" "for" "the" "test" "the" "test" "the" "test"]|nil
-List1=["bonjour comment allez-vous" "hello how are you"]
+List2=["bonjour comment allez-vous" "hello how are you"]
 
 
 %Takes a String and remove all non Ascii Character
@@ -29,36 +29,36 @@ end
 
 fun {SplitMultiple ListInput}
     case ListInput of nil then nil
-    [] H|T then {Browse {Split H}} {Split H}|{SplitMultiple T}
+    [] H|T then {Split H}|{SplitMultiple T}
     end
 end
 
 %Use {ClusterMaker}
 fun {SubCluster Input Start Num} Res in
-if {List.length Input} < Num then
-    {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
-else
-    if {List.length Input}<Start+Num then
-        nil
+    if {List.length Input} < Num then
+        {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
     else
-        Res={List.drop Input Start}
-        {List.take Res Num}
+        if {List.length Input}<Start+Num then
+            nil
+        else
+            Res={List.drop Input Start}
+            {List.take Res Num}
+        end
     end
-end
 end
 
 %With Start being 0, split a List of word into packet of Num size of word -->[a b c d] --> [[a b c] [b c d]]
 %Input: a List of ByteString  Start: Where to Start in the List    Num: The size of each subarray
 fun {ClusterMaker Input Start Num} Sub in
-case Input of nil then nil
-[] H|T then
-    Sub={SubCluster Input Start Num}
-    if Sub==nil then
-        nil
-    else
-        Sub|{ClusterMaker Input Start+1 Num}
+    case Input of nil then nil
+    [] H|T then
+        Sub={SubCluster Input Start Num}
+        if Sub==nil then
+            nil
+        else
+            Sub|{ClusterMaker Input Start+1 Num}
+        end
     end
-end
 end
 
 %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
@@ -141,7 +141,7 @@ proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes Plac
     end
 
     %Check if the record already exists
-    if false then %The correct string {List.member {Mashing Last}#".ozp" {OS.getDir "Pickle/Word"}} then
+    case Parsed of nil then %The correct string {List.member {Mashing Last}#".ozp" {OS.getDir "Pickle/Word"}} then
         {Browse 'Exist'}
         WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
     else
@@ -156,4 +156,5 @@ proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes Plac
 end
 
 
-{Browse {SplitMultiple List1}}
+{Browse 'Hello'}
+{Browse {SplitMultiple List2}}

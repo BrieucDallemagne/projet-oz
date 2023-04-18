@@ -15,7 +15,6 @@ define
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
    N=2 %set the size of Ngram
-   Parsed=nil %Contains the parsed documents
 
 
    %%% Pour ouvrir les fichiers
@@ -39,7 +38,7 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    proc {Press} %était fun avant mais ca buggait
-      {PressNgram InputText OutputText}
+      {PressNgram InputText OutputText N}
    end
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -87,7 +86,7 @@ define
    end
 
    %Takes a String, clean and put each word in a list
-      fun {Split Input}
+   fun {Split Input}
          {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
    end
    
@@ -213,7 +212,6 @@ define
             {TrainingWord Word T {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
             if H=={List.nth Word Track} then
-                  {Browse H}
                   {TrainingWord Word T Acc Track+1}
             else
                   {TrainingWord Word T Acc 1}
@@ -243,7 +241,6 @@ define
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
-         {Browse 'Next'}
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -264,42 +261,43 @@ define
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
-   proc {PressNgram InputHandle OutputHandle} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
-      %To get the user's input
-      {InputHandle get(1:InputText)}
-      CleanText1={Split InputText}
-      CleanText={ClusterMaker CleanText1 0 N}
-      Last={List.last CleanText}
-
-      %Read all the Files
-      case Parsed of nil then
-         {Browse 'We need to read the files'}
-         {Browse {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}}
-         {Delay 1000}
-         Parsed={SplitMultiple {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}}
-         {Browse Parsed}
-      [] H|T then
-         {Browse 'Files are already loaded'}
-      end
-
-      %Check if the Pickle is already existing
-      if {List.member {Mashing Last}#".ozp" {OS.getDir "Pickle/Word"}} then
-         {Browse 'Exist'}
-         WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+   Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+   
+   proc {PressNgram InputHandle OutputHandle Ngram} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
+      if Ngram =< 0 then
+         {Browse 'There is no word like this'}
       else
-         {Browse 'Working'}
-         TempDict=a()
-         WordRecord={TrainingWordFiles Last Parsed TempDict N}
-      end
+         %To get the user's input
+         {InputHandle get(1:InputText)}
+         CleanText1={Split InputText}
+         CleanText={ClusterMaker CleanText1 0 Ngram}
+         Last={List.last CleanText}
 
-      %Add the true Pickle loading with concatenation
-      %create a search inside a tuple
-      case {FindBiggest WordRecord} of nil then         
-         PlaceHolder="OOOOPSS"
-      else
-         PlaceHolder={FindBiggest WordRecord}
+         {Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
+         %Check if the Pickle is already existing
+         {Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
+         {Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
+         if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
+            {Browse 'Exist'}
+            WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+         else
+            {Browse 'Working'}
+            TempDict=a()
+            WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+         end
+
+         {Browse WordRecord}
+         %Add the true Pickle loading with concatenation
+         %create a search inside a tuple
+         case {FindBiggest WordRecord} of nil then    
+            {Browse {FindBiggest WordRecord}}
+            {PressNgram InputHandle OutputHandle Ngram-1}   
+         else
+            {Browse {FindBiggest WordRecord}}  
+            PlaceHolder={FindBiggest WordRecord}
+            {OutputHandle set(1:{Clean InputText}#PlaceHolder)} %{FindBiggestDict Dict}
+         end
       end
-      {OutputHandle set(1:{Clean InputText}#PlaceHolder)} %{FindBiggestDict Dict}
    end
 
    % Acept only alpha character
