@@ -14,7 +14,7 @@ define
    OutputText
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
-   N=2 %set the size of Ngram
+   N=4 %set the size of Ngram
 
 
    %%% Pour ouvrir les fichiers
@@ -270,32 +270,38 @@ define
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={Split InputText}
-         CleanText={ClusterMaker CleanText1 0 Ngram}
-         Last={List.last CleanText}
-
-         {Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
-         %Check if the Pickle is already existing
-         {Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
-         {Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
-         if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-            {Browse 'Exist'}
-            WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+         if {List.length CleanText1} < Ngram then
+            {Browse 'None'}
+            {Delay 1000}
+            {PressNgram InputHandle OutputHandle {List.length CleanText1}}
          else
-            {Browse 'Working'}
-            TempDict=a()
-            WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
-         end
+            CleanText={ClusterMaker CleanText1 0 Ngram}
+            Last={List.last CleanText}
 
-         {Browse WordRecord}
-         %Add the true Pickle loading with concatenation
-         %create a search inside a tuple
-         case {FindBiggest WordRecord} of nil then    
-            {Browse {FindBiggest WordRecord}}
-            {PressNgram InputHandle OutputHandle Ngram-1}   
-         else
-            {Browse {FindBiggest WordRecord}}  
-            PlaceHolder={FindBiggest WordRecord}
-            {OutputHandle set(1:{Clean InputText}#PlaceHolder)} %{FindBiggestDict Dict}
+            {Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
+            %Check if the Pickle is already existing
+            {Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
+            {Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
+            if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
+               {Browse 'Exist'}
+               WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+            else
+               {Browse 'Working'}
+               TempDict=a()
+               WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+            end
+
+            {Browse WordRecord}
+            %Add the true Pickle loading with concatenation
+            %create a search inside a tuple
+            case {FindBiggest WordRecord} of nil then    
+               {Browse {FindBiggest WordRecord}}
+               {PressNgram InputHandle OutputHandle Ngram-1}   
+            else
+               {Browse {FindBiggest WordRecord}}  
+               PlaceHolder={FindBiggest WordRecord}
+               {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
+            end
          end
       end
    end
@@ -448,6 +454,18 @@ define
       end
    end
 
+   proc {Infinity Num} Res in
+      if Num =< 0 then
+         skip
+      else
+         {Delay 50}
+         {PressNgram InputText OutputText N}
+         {OutputText get(1:Res)}
+         {InputText set(1:Res)}
+         {Browse Num}
+         {Infinity Num-1}
+      end
+   end
 
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
@@ -543,7 +561,11 @@ define
       lr(background:BGColor 
       glue:nw
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw insertbackground:black) 
-      button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
+      td(
+         background:BGColor 
+         glue:nw
+         button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
+         button(text:"Infinity" init:"Infinity" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$}{Browse 'Oui Brieuc ça arrive'} {Infinity 10}end))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
