@@ -1,9 +1,10 @@
 declare 
-List1="Hello\r my namé is   ç&§ ° How are you?  "
+List1="Hello\r my namé is   ç&§ ° How are you? Ã "
 NumberWord=2
 N=2
 Parsed=["this" "another" "test" "this" "is" "the" "test" "for" "the" "test" "the" "test" "the" "test"]|nil
 List2=["bonjour comment allez-vous" "hello how are you"]
+Test1="... HEllo\r how are you !"
 
 
 %Takes a String and remove all non Ascii Character
@@ -14,7 +15,11 @@ fun {Clean Input}
             32|{Clean T}
         else 
           if {Char.isAlpha H} then
-             H|{Clean T}
+                if 195==H then
+                    32|{Clean T}
+                else
+                    H|{Clean T}
+                end
           else
              32|{Clean T}
           end
@@ -155,16 +160,7 @@ proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes Plac
 
 end
 
-proc {ButtonInfinity Input} UserInput CleanInput in
-    UserInput=Input
-    CleanInput={List.filter UserInput Char.isDigit}
-    case CleanInput of nil then {Browse 'Please provide a correct number'}
-    else
-        {Browse {String.toInt CleanInput}}
-        {Browse 'We are good'}
-        {Infinity {String.toInt CleanInput}}
-    end
- end
 
- {ButtonInfinity "hello- 10 ej  1"}
+{Browse "Ã"}
+{Browse {List.map {Split List1} String.toAtom}}
 

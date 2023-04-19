@@ -77,8 +77,12 @@ define
          if {Char.isCntrl H} then
             32|{Clean T}
          else 
-            if {Char.isAlNum H} then
-               H|{Clean T}
+            if {Char.isAlpha H} then
+                  if 195==H then
+                     32|{Clean T}
+                  else
+                     H|{Clean T}
+                  end
             else
                32|{Clean T}
             end
@@ -273,7 +277,6 @@ define
          CleanText1={Split InputText}
          if {List.length CleanText1} < Ngram then
             {Browse 'None'}
-            {Delay 1000}
             {PressNgram InputHandle OutputHandle {List.length CleanText1}}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
@@ -459,7 +462,6 @@ define
       if Num =< 0 then
          skip
       else
-         {Delay 50}
          {PressNgram InputText OutputText N}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
@@ -577,7 +579,7 @@ define
          glue:w
          button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:Press key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
-         text(handle:InfiniteInput init:"Amount" width:10 height:1 font:Font wrap:word background:white glue:w  padx:40 pady:3 foreground:black insertbackground:black)))
+         entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:40 pady:3 foreground:black insertbackground:black)))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
