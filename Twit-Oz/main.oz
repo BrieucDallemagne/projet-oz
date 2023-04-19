@@ -12,6 +12,7 @@ import
 define
    InputText
    OutputText
+   InfiniteInput
    NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
    DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
    N=4 %set the size of Ngram
@@ -76,7 +77,7 @@ define
          if {Char.isCntrl H} then
             32|{Clean T}
          else 
-            if {Char.isAlpha H} then
+            if {Char.isAlNum H} then
                H|{Clean T}
             else
                32|{Clean T}
@@ -467,6 +468,16 @@ define
       end
    end
 
+   proc {ButtonInfinity} UserInput CleanInput in
+      {InfiniteInput get(1:UserInput)}
+      CleanInput={List.filter UserInput Char.isDigit}
+      case CleanInput of nil then {Browse 'Please provide a correct number'}
+      else
+          {Browse {String.toInt CleanInput}}
+          {Browse 'We are good'}
+          {Infinity {String.toInt CleanInput}}
+      end
+   end
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -563,9 +574,10 @@ define
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw insertbackground:black) 
       td(
          background:BGColor 
-         glue:nw
-         button(text:"Predict" init:"Result" padx:10 foreground:black bg:DarkerBGC width:15 action:Press key:"Return"))
-         button(text:"Infinity" init:"Infinity" padx:10 foreground:black bg:DarkerBGC width:15 action:proc{$}{Browse 'Oui Brieuc ça arrive'} {Infinity 10}end))
+         glue:w
+         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:Press key:"Return")
+         button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
+         text(handle:InfiniteInput init:"Amount" width:10 height:1 font:Font wrap:word background:white glue:w  padx:40 pady:3 foreground:black insertbackground:black)))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)

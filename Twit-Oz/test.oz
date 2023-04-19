@@ -155,6 +155,16 @@ proc {PressNgram} InputText CleanText1 CleanText Last Dict TempDict TempRes Plac
 
 end
 
+proc {ButtonInfinity Input} UserInput CleanInput in
+    UserInput=Input
+    CleanInput={List.filter UserInput Char.isDigit}
+    case CleanInput of nil then {Browse 'Please provide a correct number'}
+    else
+        {Browse {String.toInt CleanInput}}
+        {Browse 'We are good'}
+        {Infinity {String.toInt CleanInput}}
+    end
+ end
 
-{Browse 'Hello'}
-{Browse {SplitMultiple List2}}
+ {ButtonInfinity "hello- 10 ej  1"}
+
