@@ -13,8 +13,14 @@ define
    InputText
    OutputText
    InfiniteInput
-   NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
-   DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
+   Parsed
+   NumberWord
+   DataBase
+   
+   thread
+      NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
+      DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
+   end
    N=4 %set the size of Ngram
 
 
@@ -38,8 +44,8 @@ define
    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
-   proc {Press} %était fun avant mais ca buggait
-      {PressNgram InputText OutputText N}
+   proc {Press} Result in%était fun avant mais ca buggait
+      {PressNgram InputText OutputText N Result}
    end
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -266,9 +272,10 @@ define
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
-   Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
-   
-   proc {PressNgram InputHandle OutputHandle Ngram} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
+   thread
+      Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+   end
+   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
       else
@@ -277,7 +284,7 @@ define
          CleanText1={Split InputText}
          if {List.length CleanText1} < Ngram then
             {Browse 'None'}
-            {PressNgram InputHandle OutputHandle {List.length CleanText1}}
+            {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
@@ -300,10 +307,12 @@ define
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
                {Browse {FindBiggest WordRecord}}
-               {PressNgram InputHandle OutputHandle Ngram-1}   
+               {PressNgram InputHandle OutputHandle Ngram-1 Result}   
             else
                {Browse {FindBiggest WordRecord}}  
                PlaceHolder={FindBiggest WordRecord}
+               Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
+               {Browse Result}
                {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
             end
          end
@@ -458,11 +467,11 @@ define
       end
    end
 
-   proc {Infinity Num} Res in
+   proc {Infinity Num} Res Result in
       if Num =< 0 then
          skip
       else
-         {PressNgram InputText OutputText N}
+         {PressNgram InputText OutputText N Result}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
          {Browse Num}
