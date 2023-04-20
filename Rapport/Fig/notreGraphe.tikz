@@ -1,0 +1,37 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=In node] (0) at (0, 2.5) {};
+		\node [style=In node] (1) at (1, 1) {};
+		\node [style=In node] (2) at (0, -0.5) {};
+		\node [style=Content Node] (3) at (-2, -1.75) {};
+		\node [style=Content Node] (4) at (-1, -1.75) {};
+		\node [style=Content Node] (5) at (0, -1.75) {};
+		\node [style=Content Node] (6) at (1, -1.75) {};
+		\node [style=Content Node] (7) at (2, -1.75) {};
+		\node [style=Out Node] (8) at (1, -0.5) {};
+		\node [style=Out Node] (9) at (2, -0.5) {};
+		\node [style=Out Node] (10) at (0, 1) {};
+		\node [style=Out Node] (11) at (-1, 1) {};
+		\node [style=Text] (12) at (0, 3.25) {Entrance};
+		\node [style=Text] (13) at (1.75, 1.5) {\textit{this}};
+		\node [style=Text] (14) at (-0.5, 0) {\textit{is}};
+		\node [style=Text] (15) at (-2, -2.5) {\textit{a}};
+		\node [style=Text] (16) at (-1, -2.5) {\textit{an}};
+		\node [style=Text] (17) at (0, -2.5) {\textit{for}};
+		\node [style=Text] (18) at (1, -2.5) {\textit{to}};
+		\node [style=Text] (19) at (2, -2.5) {\textit{on}};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (2) to (3);
+		\draw (2) to (4);
+		\draw (2) to (5);
+		\draw (2) to (6);
+		\draw [in=150, out=-30] (2) to (7);
+		\draw (2) to (1);
+		\draw (1) to (0);
+		\draw [style=new edge style 0] (9) to (1);
+		\draw [style=new edge style 0] (8) to (1);
+		\draw [style=new edge style 0] (10) to (0);
+		\draw [style=new edge style 0] (11) to (0);
+	\end{pgfonlayer}
+\end{tikzpicture}
