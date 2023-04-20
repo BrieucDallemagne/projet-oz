@@ -44,8 +44,9 @@ define
    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
-   proc {Press} Result in%était fun avant mais ca buggait
+   fun {Press} Result in
       {PressNgram InputText OutputText N Result}
+      Result
    end
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -586,7 +587,7 @@ define
       td(
          background:BGColor 
          glue:w
-         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:Press key:"Return")
+         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:40 pady:3 foreground:black insertbackground:black)))
       lr(background:BGColor 
