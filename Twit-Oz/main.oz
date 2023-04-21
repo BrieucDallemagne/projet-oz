@@ -16,12 +16,13 @@ define
    Parsed
    NumberWord
    DataBase
+   N % le N de N-gramme
+   NgramHandle % son Handle
    
    thread
       NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
       DataBase={Pickle.load 'Pickle/DataBase.ozp'} %load Pickle
    end
-   N=4 %set the size of Ngram
 
 
    %%% Pour ouvrir les fichiers
@@ -44,8 +45,17 @@ define
    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
+   fun {GetN} NHandle in
+      {NgramHandle get(1:NHandle)}
+      if {String.isInt NHandle} then
+         {String.toInt NHandle}
+      else
+         2
+      end
+   end
+
    fun {Press} Result in
-      {PressNgram InputText OutputText N Result}
+      {PressNgram InputText OutputText {GetN} Result}
       Result
    end
 
@@ -274,8 +284,10 @@ define
    end
 
    thread
+      %Permet de lire tous les fichiers et fait des listes de mots
       Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
    end
+
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
@@ -491,13 +503,23 @@ define
       end
    end
 
+   proc {FullGramHelper N Files}
+      {Browse 'New'}
+   end
+
+
+   proc {FullGram}
+      {FullGramHelper {GetN} Parsed}
+   end
+
+
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
       BGColor=c(242 242 242) % couleur fond
       DarkerBGC=c(230 230 230) % couleur de contraste
       Maxsize=maxsize(width:1920 height:1080)
-      Minsize=minsize(width:300 height:180)
+      Minsize=minsize(width:600 height:240)
       Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
       %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
 
@@ -587,9 +609,10 @@ define
       td(
          background:BGColor 
          glue:w
+         entry(handle:NgramHandle init:"N (default:2)" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
          button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
-         entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:40 pady:3 foreground:black insertbackground:black)))
+         entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
