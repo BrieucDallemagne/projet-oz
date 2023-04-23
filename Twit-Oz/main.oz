@@ -18,6 +18,11 @@ define
    DataBase
    N % le N de N-gramme
    NgramHandle % son Handle
+   SeparatedWords
+   Files
+   NewThread
+   TakeDrop
+   Threads
    
    thread
       NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
@@ -61,23 +66,41 @@ define
 
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
    %%% Les threads de parsing envoient leur resultat au port Port
-   proc {LaunchThreads Port N}
-      % TODO
-      skip
+   fun {SplitList L N}
+      case N of 0 then nil
+      [] 1 then L
+      else {Map {SplitList L (N-1)} fun {$ Xs} {Append Xs {TakeDrop L N}} end}
+      end
    end
 
-   %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-   %%% Les threads de parsing envoient leur resultat au port Port
-   %%%proc {LaunchThreads Port N}
-   %%%   proc {LaunchThread}
-   %%%      skip
-   %%%   end
-   %%%in
-      %% Créez et lancez les threads
-   %%%   for I in 1..N do
-   %%%      {Thread.create proc {$} {LaunchThread} end}
-   %%%   end
-   %%%end
+   fun {OpenAndParseFiles Files}
+      {Map Files fun {$ F} {Split {Clean {OpenMultipleFile F}}} end}
+   end
+
+   proc {CreateThreadsAndParseFiles Port Files NThreads}
+      Threads = {Map {SplitList Files NThreads}
+                     fun {$ FilesChunk}
+                        Thread = {NewThread init}
+                     in
+                        {Thread.start Thread fun {$} {Port.send {OpenAndParseFiles FilesChunk}} end}
+                        Thread
+                     end}
+      for T in Threads do {Thread.join T} end
+   end
+
+   proc {LaunchThreads SeparatedWordsPort NbThreads}
+      % Liste des fichiers
+      Files = {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}
+
+      % Création des threads et traitement des fichiers
+      {CreateThreadsAndParseFiles SeparatedWordsPort Files NbThreads}
+
+      % Recevoir les résultats des threads
+      for _ in 1..NbThreads do
+         SeparatedWords = {Port.receive SeparatedWordsPort}
+         % Traitement des résultats, par exemple les fusionner
+      end
+   end
 
    %%% Ajouter vos fonctions et procédures auxiliaires ici
    proc {Save} %To Save input
@@ -301,6 +324,7 @@ define
       Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
    end
 
+   
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
@@ -637,16 +661,16 @@ define
       % Creation de la fenetre
       Window={QTk.build Description}
       {Window show}
-
-      {InputText tk(insert 'end' "Loading... Please wait.")}
+   
+      {InputText tk(insert 'end' " Loading... Please wait.")}
       %{InputText bind(event:"<Control-s>" action:Press)}  %You can also bind events
-
+   
       % On lance les threads de lecture et de parsing
       SeparatedWordsPort = {NewPort SeparatedWordsStream}
       NbThreads = 4
       {LaunchThreads SeparatedWordsPort NbThreads}
-
-      {InputText set(1:"")}
+   
+      {InputText set(1:" ")}
    end
 end
 % Appelle la procedure principale
