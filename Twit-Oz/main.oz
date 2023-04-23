@@ -333,7 +333,8 @@ define
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
                {Browse {FindBiggest WordRecord}}
-               {PressNgram InputHandle OutputHandle Ngram-1 Result}   
+               {PressNgram InputHandle OutputHandle Ngram-1 Result}
+               {OutputHandle set(1:{Clean InputText})} 
             else
                {Browse {FindBiggest WordRecord}}  
                PlaceHolder={FindBiggest WordRecord}
@@ -497,7 +498,7 @@ define
       if Num =< 0 then
          skip
       else
-         {PressNgram InputText OutputText N Result}
+         Result={Press}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
          {Browse Num}
