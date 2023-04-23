@@ -265,8 +265,6 @@ define
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   %Word: liste de mot à trouver   Files: une liste de listes de mots parsés
-   %Acc: un accumulateur sous forme de record   N: nombre pour le N-gramme
    fun {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
       Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
 
@@ -274,6 +272,7 @@ define
          %Because Dictionnary is not supported by pickle in Oz
          Mashed={VirtualString.toString {Mashing Word}}
          {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
+         {Browse 'Finished'}
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
@@ -517,30 +516,13 @@ define
       end
    end
 
-   proc {SubFullGramHelper N File Acc}
-      case File of nil then skip
-      [] H|T then 
-         if {List.member {VirtualString.toString {Mashing H}#".ozp"} {OS.getDir "Pickle/Word"}} then
-            {SubFullGramHelper N T Acc}
-         else
-            {SubFullGramHelper N T {TrainingWordFiles [H] Parsed Acc N}}
-         end
-      end
-   end
-
-   proc {FullGramHelper N Files Acc} NewNode in
-      NewNode=a()
-      case Files of nil then skip
-      [] H|T then {SubFullGramHelper N H NewNode}
-      end
+   proc {FullGramHelper N Files}
+      {Browse 'New'}
    end
 
 
-   proc {FullGram} FullTree in
-      {Browse 'Started the process'}
-      FullTree=a()
-      {FullGramHelper {GetN} Parsed FullTree}
-      {Browse FullTree}
+   proc {FullGram}
+      {FullGramHelper {GetN} Parsed}
    end
 
 
@@ -620,7 +602,6 @@ define
       menu:menu(background:DarkerBGC 
       tearoff:false
       command(text:"Update Database" foreground:black action:proc{$}{UpdateDatabase FeedbackUpdate}end accelerator:"Control-b")
-      command(text:"Create Full" foreground:black action:FullGram accelerator:"Control-f")
       separator
       command(text:"Save" foreground:black action:Save accelerator:"Control-s")
       command(text:"Save As" foreground:black action:proc{$} {Browse 'Stop clicking me it is really awkward'} end accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
