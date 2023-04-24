@@ -25,7 +25,10 @@ testrun: $(ENTRY_POINT)
 pickle:
 	rm -f Pickle/Word/*.ozp
 
-clean :
+user:
+	rm -f User/*.txt
+
+clean : pickle user
 	rm -f *.ozf
 
-.PHONY: clean pickle
+.PHONY: clean pickle user

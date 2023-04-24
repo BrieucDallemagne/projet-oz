@@ -59,6 +59,17 @@ define
       end
    end
 
+   %Takes a String, clean and put each word in a list
+      fun {Split Input}
+         {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
+   end
+   
+   fun {SplitMultiple ListInput}
+         case ListInput of nil then nil
+         [] H|T then {Split H}|{SplitMultiple T}
+         end
+   end
+
    fun {Press} Result in
       {PressNgram InputText OutputText {GetN} Result}
       Result
@@ -116,9 +127,6 @@ define
    end
 
    %%% Ajouter vos fonctions et procédures auxiliaires ici
-   proc {Save} %To Save input
-      {Browse 'Stop clicking me it is awkward'} 
-   end
 
    %To create a pop-up window displaying some text
    proc {NewWin Message Inside Handle Return}
@@ -147,16 +155,6 @@ define
       end
    end
 
-   %Takes a String, clean and put each word in a list
-   fun {Split Input}
-         {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
-   end
-   
-   fun {SplitMultiple ListInput}
-         case ListInput of nil then nil
-         [] H|T then {Split H}|{SplitMultiple T}
-         end
-   end
 
    %Read a file. File is the name of the file
    fun {ReadFile File} F Res in
@@ -460,6 +458,8 @@ define
          {OS.pipe "sh Pickle/Update.sh" "" PidI StatusT}
          Info=" "
       else
+         PidI={OS.system "ls"}
+         StatusT={OS.system "make pickle"}
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
 
@@ -554,6 +554,24 @@ define
       {FullGramHelper {GetN} Parsed}
    end
 
+   proc {Save} F Input Ecrit in %To Save input 
+      {OutputText get(1:Input)}
+      {Browse Input}
+      F={New Open.file init(name:"User/"#{Mashing {Split Input}}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
+      %{F write(vs:Input len:{List.length Input})}
+      %{F write(vs:"Test" len:4)}
+      {F write(vs:Input len:{List.length Input})}
+      {F close()}
+   end
+
+   proc {CleanPickle} Done in
+      Done={OS.system "make pickle"}
+   end
+
+   proc {CleanUser} Done in
+      Done={OS.system "make user"}
+   end
+      
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -631,9 +649,10 @@ define
       menu:menu(background:DarkerBGC 
       tearoff:false
       command(text:"Update Database" foreground:black action:proc{$}{UpdateDatabase FeedbackUpdate}end accelerator:"Control-b")
+      command(text:"Delete Tree" foreground:black action:CleanPickle accelerator:"Control-Alt-b") % Ici, on ajoute des boutons pour controler l'application
       separator
       command(text:"Save" foreground:black action:Save accelerator:"Control-s")
-      command(text:"Save As" foreground:black action:proc{$} {Browse 'Stop clicking me it is really awkward'} end accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
+      command(text:"Delete Save" foreground:black action:CleanUser accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
       separator
       command(text:"Quit" foreground:black action:proc{$}{Application.exit 0} end accelerator:"Control-q")    
       ))
@@ -675,7 +694,7 @@ define
       % Décommentez moi quand la fonction de Thread fonctionne
       %{LaunchThreads SeparatedWordsPort NbThreads}
    
-      {InputText set(1:" ")}
+      {InputText set(1:"")}
    end
 end
 % Appelle la procedure principale
