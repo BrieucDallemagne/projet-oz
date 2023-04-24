@@ -146,7 +146,11 @@ define
                   if 195==H then
                      32|{Clean T}
                   else
-                     H|{Clean T}
+                     if 226==H then
+                        32|{Clean T}
+                     else
+                        H|{Clean T}
+                     end
                   end
             else
                32|{Clean T}

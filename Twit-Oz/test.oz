@@ -37,3 +37,6 @@ ReducedWrong={Reducing Wrong}
 
 {Browse 'Shortest'}
 {Browse {FindClosest ReducedWrong.1 ReducedTest 1 0 1000}}
+
+TestSecond="âhello"
+{Browse {String.toAtom {Filter TestSecond Char.isAlpha}}}
