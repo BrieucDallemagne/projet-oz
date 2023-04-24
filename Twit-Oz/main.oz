@@ -64,37 +64,50 @@ define
       Result
    end
 
+   %%% Fetch Tweets Folder from CLI Arguments
+   %%% See the Makefile for an example of how it is called
+   fun {GetSentenceFolder}
+      Args = {Application.getArgs record('folder'(single type:string optional:false))}
+   in
+      Args.'folder'
+   end
+
    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
    %%% Les threads de parsing envoient leur resultat au port Port
-   fun {SplitList L N}
-      case N of 0 then nil
-      [] 1 then L
-      else {Map {SplitList L (N-1)} fun {$ Xs} {Append Xs {TakeDrop L N}} end}
+   % ["path1" "path2" "path3"] avec 2 --> [["path1" "path2"] ["path3"]]
+   fun {SplitList L N} Size in
+      if N == 0 then
+         nil
+      else
+         Size =  {List.length L} div N
+         {List.take L Size} | {SplitList {List.drop L Size} N-1}
       end
    end
 
-   fun {OpenAndParseFiles Files}
-      {Map Files fun {$ F} {Split {Clean {OpenMultipleFile F}}} end}
+   fun {OpenAndParseFiles Files} 
+      {Map Files fun {$ F} {SplitMultiple {List.map {OpenMultipleFile F} Clean}} end}
    end
 
-   proc {CreateThreadsAndParseFiles Port Files NThreads}
-      Threads = {Map {SplitList Files NThreads}
-                     fun {$ FilesChunk}
-                        Thread = {NewThread init}
-                     in
-                        {Thread.start Thread fun {$} {Port.send {OpenAndParseFiles FilesChunk}} end}
+   proc {CreateThreadsAndParseFiles SeparatedWordsPort Files NThreads} 
+
+      {List.forAll {SplitList Files NThreads}
+                     proc {$ FilesChunk}
                         Thread
+                     in
+                        thread 
+                           {Port.send SeparatedWordsPort {OpenAndParseFiles FilesChunk}}
+                        end
+                     
                      end}
-      for T in Threads do {Thread.join T} end
+      for T in SeparatedWordsPort do {Thread.join T} end
    end
 
    proc {LaunchThreads SeparatedWordsPort NbThreads}
       % Liste des fichiers
-      Files = {List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}
+      Files = {OS.getDir {GetSentenceFolder}}
 
       % Création des threads et traitement des fichiers
-      {CreateThreadsAndParseFiles SeparatedWordsPort Files NbThreads}
-
+      {CreateThreadsAndParseFiles SeparatedWordsPort Files NbThreads} %ca bloque
       % Recevoir les résultats des threads
       for _ in 1..NbThreads do
          SeparatedWords = {Port.receive SeparatedWordsPort}
@@ -105,15 +118,6 @@ define
    %%% Ajouter vos fonctions et procédures auxiliaires ici
    proc {Save} %To Save input
       {Browse 'Stop clicking me it is awkward'} 
-   end
-
-
-   %%% Fetch Tweets Folder from CLI Arguments
-   %%% See the Makefile for an example of how it is called
-   fun {GetSentenceFolder}
-      Args = {Application.getArgs record('folder'(single type:string optional:false))}
-   in
-      Args.'folder'
    end
 
    %To create a pop-up window displaying some text
