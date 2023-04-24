@@ -571,7 +571,40 @@ define
    proc {CleanUser} Done in
       Done={OS.system "make user"}
    end
+
+   fun {Reducing ListInput}
+      {List.map ListInput fun{$ O}{List.foldL O fun{$ X Y} X+Y end 0} end }
+   end
+   
+   fun {FindClosest Input ListWord Start Track Diff} Close in
+      if Start > {List.length ListWord} then
+            Track
+      else
+            Close={Number.abs {Number.'-' Input {List.nth ListWord Start}}}
+            if Close < Diff then
+               {FindClosest Input ListWord Start+1 Start Close}
+            else
+               {FindClosest Input ListWord Start+1 Track Diff}
+            end
+      end
+   end 
       
+%   fun {CorrectInputHelper Check Correct} Result in
+%      Result={FindClosest Check Correct 1 0 1000}
+%      if Result == 0 then
+%         Check
+%      else
+%         {List.nth Correct Result}
+%      end
+%   end
+%
+%   fun {CorrectInput Count Correct} Input in
+%
+%   proc {CorrectInput} Input in
+%      {InputText get(1:Input)}
+%      CorrectWord={RemoveTwiceAll{SplitMultiple{OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}}
+%      {CorrectInput {List.length Input}}
+%
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
