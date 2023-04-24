@@ -350,6 +350,7 @@ define
             if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
                {Browse 'Exist'}
                WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+               {Browse WordRecord}
             else
                {Browse 'Working'}
                TempDict=a()
@@ -357,7 +358,7 @@ define
             end
 
             {Browse WordRecord}
-            %Add the true Pickle loading with concatenation
+            %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
                {Browse {FindBiggest WordRecord}}
