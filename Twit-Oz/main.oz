@@ -581,6 +581,9 @@ define
    end
    
    fun {FindClosest Input ListWord Start Track Diff} Close in
+      {Browse Input}
+      {Browse ListWord}
+      {Delay 10000}
       if Start > {List.length ListWord} then
             Track
       else
@@ -593,22 +596,30 @@ define
       end
    end 
       
-%   fun {CorrectInputHelper Check Correct} Result in
-%      Result={FindClosest Check Correct 1 0 1000}
-%      if Result == 0 then
-%         Check
-%      else
-%         {List.nth Correct Result}
-%      end
-%   end
-%
-%   fun {CorrectInput Count Correct} Input in
-%
-%   proc {CorrectInput} Input in
-%      {InputText get(1:Input)}
-%      CorrectWord={RemoveTwiceAll{SplitMultiple{OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}}
-%      {CorrectInput {List.length Input}}
-%
+   fun {CorrectInputHelper Check Correct} Result in
+      Result={FindClosest {Reducing [Check]}.1 {Reducing Correct} 1 0 1000}
+      if Result == 0 then
+         Check
+      else
+         {List.nth Correct Result}
+      end
+   end
+
+   fun {CorrectInputSecond Count Correct Input}
+      case Input of nil then nil
+      [] H|T then {CorrectInputHelper H Correct}|{CorrectInputSecond Count-1 Correct T}
+      end
+   end
+
+   proc {CorrectInput} Input Result CorrectWord in
+      {InputText get(1:Input)}
+      CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
+      {Browse CorrectWord}
+      {Delay 1000}
+      Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
+      {OutputText set(1:{List.tokens {Mashing Result} & })}
+   end
+
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -710,7 +721,8 @@ define
          entry(handle:NgramHandle init:"N (default:2)" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
          button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
-         entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)))
+         entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
+         button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
