@@ -363,7 +363,6 @@ define
             case {FindBiggest WordRecord} of nil then    
                {Browse {FindBiggest WordRecord}}
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
-               {OutputHandle set(1:{Clean InputText})} 
             else
                {Browse {FindBiggest WordRecord}}  
                PlaceHolder={FindBiggest WordRecord}
@@ -659,7 +658,7 @@ define
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
-      text(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate wrap:word padx:5 background:BGColor foreground:black cursor:"X_cursor" width:30 height:10 glue:w relief:{String.toAtom "flat"} action:proc{$}{FeedbackUpdate set(1:"Pour mettre à jour la base de donnée, cliquer sur File" foreground:black)}end))
+      message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
 
@@ -667,13 +666,14 @@ define
       Window={QTk.build Description}
       {Window show}
    
-      {InputText tk(insert 'end' " Loading... Please wait.")}
+      %{InputText tk(insert 'end' " Loading... Please wait.")}
       %{InputText bind(event:"<Control-s>" action:Press)}  %You can also bind events
    
       % On lance les threads de lecture et de parsing
       SeparatedWordsPort = {NewPort SeparatedWordsStream}
       NbThreads = 4
-      {LaunchThreads SeparatedWordsPort NbThreads}
+      % Décommentez moi quand la fonction de Thread fonctionne
+      %{LaunchThreads SeparatedWordsPort NbThreads}
    
       {InputText set(1:" ")}
    end
