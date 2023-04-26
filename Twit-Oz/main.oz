@@ -10,6 +10,12 @@ import
    Browser
    Extra at 'extra.ozf'
 define
+   %For QTK
+   BGColor=c(242 242 242) % couleur fond
+   DarkerBGC=c(230 230 230) % couleur de contraste
+   Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
+   BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
+
    InputText
    OutputText
    InfiniteInput
@@ -23,6 +29,9 @@ define
    NewThread
    TakeDrop
    Threads
+   Akinator={QTk.newImage photo(file:"./Pic/akinator_1_defi.png" format:"png" height:100 width:100)}
+   C
+
    
    thread
       NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
@@ -366,6 +375,7 @@ define
                PlaceHolder={FindBiggest WordRecord}
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
                {Browse Result}
+               {TestImage WordRecord.PlaceHolder Result.2.1}
                {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
             end
          end
@@ -615,15 +625,38 @@ define
       {OutputText set(1:{List.tokens {Mashing Result} & })}
    end
 
+   proc {OpenDialog} Path F Content in
+      thread
+         Path={QTk.dialogbox load(initialdir:"./User" title:"Load" filetypes:q(q( "Texte" q(".txt"))) defaultextension:"txt" $)}
+         {Browse {String.toAtom Path}}
+      end
+      F={New Open.file init(name:Path flags:[read])}
+      {F read(list:Content size:all)}
+      {F close}
+      {InputText set(1:Content)}
+   end
+
+   proc {TestImage Occ All} Ratio InFill NewFont in
+
+
+      NewFont={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
+      Ratio={Int.toFloat Occ} / {Int.toFloat All} %Number/All
+      InFill=c({Float.toInt (1.0-Ratio)*255.0} {Float.toInt Ratio*255.0} 0)
+      {Browse Ratio}
+
+      {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
+      {C create(rectangle 50 50 150 150 fill:BGColor outline:BGColor)}
+
+      {C create(text 95 100 font:BigFont text:{Int.toString {Float.toInt 100.0*Ratio}}#"%" width:70 fill:InFill)}
+      {C create(arc 10 10 190 190 fill:BGColor outline:InFill start:220 extent:{Float.toInt ~260.0*Ratio} width:10 style:arc)}
+   end
+
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
-      BGColor=c(242 242 242) % couleur fond
-      DarkerBGC=c(230 230 230) % couleur de contraste
       Maxsize=maxsize(width:1920 height:1080)
-      Minsize=minsize(width:600 height:240)
-      Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
+      Minsize=minsize(width:700 height:380)
       %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
 
       HelpMessage="\n This tool has been designed for the class 'LINFO1104'\n \n The purpose of this tool is to provide completion of tweets based on a dataset (here right and far right public figure)\n \n Simply type in the white box something, click result and get the rest of the tweet in the black box\n \n If you want to save your input type CTRL+S and CTRL+SHIFT+S to save it somewhere else \n  repo: https://github.com/BrieucDallemagne/projet-oz"
@@ -643,6 +676,7 @@ define
       foreground:black
       )
       action:toplevel#close) % quitte le programme quand la fenetre est fermee)
+
 
    in
       %% Fonction d'exemple qui liste tous les fichiers
@@ -697,6 +731,8 @@ define
       command(text:"Save" foreground:black action:Save accelerator:"Control-s")
       command(text:"Delete Save" foreground:black action:CleanUser accelerator:"Control-Alt-s") % Ici, on ajoute des boutons pour controler l'application
       separator
+      command(text:"Open" foreground:black action:OpenDialog accelerator:"Control-o")
+      separator
       command(text:"Quit" foreground:black action:proc{$}{Application.exit 0} end accelerator:"Control-q")    
       ))
       menubutton(glue:nw foreground:black highlightcolor:DarkerBGC bg:DarkerBGC text:"Help" font:Font width:5
@@ -704,7 +740,7 @@ define
       tearoff:false
       %local han in
          %han = {New POPUP}
-      command(text:"Newcommers"  foreground:black action:proc{$}{Newcommers POPUP} end)
+      command(text:"Newcommers"  foreground:black action:proc{$} Pop=POPUP in thread {Newcommers Pop} end end)
       %end
       command(text:"About" foreground:black )))) %action:proc{$} {Extra.Test} end
       lr(background:BGColor 
@@ -721,9 +757,11 @@ define
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
-      message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w))
+      message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w)
+      canvas(handle:C height:200 width:200 background:BGColor borderwidth:0))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
+
 
       % Creation de la fenetre
       Window={QTk.build Description}
