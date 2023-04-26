@@ -758,10 +758,9 @@ define
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
       message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w)
-      canvas(handle:C height:200 width:200 background:BGColor borderwidth:0))
+      canvas(handle:C height:200 width:200 background:BGColor borderwidth:0 highlightthickness:0))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
-
 
       % Creation de la fenetre
       Window={QTk.build Description}
@@ -777,6 +776,8 @@ define
       %{LaunchThreads SeparatedWordsPort NbThreads}
    
       {InputText set(1:"")}
+
+      {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
 
       %%ENDOFCODE%%
    end
