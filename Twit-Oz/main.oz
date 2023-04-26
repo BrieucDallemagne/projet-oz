@@ -83,12 +83,7 @@ define
    end
 
    fun {Press} Result in
-      %Start to Run
-      {Loading 100.0}
       {PressNgram InputText OutputText {GetN} Result}
-      %Stop Loading
-      {Running set(1:false)}
-
       Result
    end
 
@@ -556,13 +551,15 @@ define
    end
 
    proc {ButtonInfinity} UserInput CleanInput in
+      {Loading 100.0}
       {InfiniteInput get(1:UserInput)}
       CleanInput={List.filter UserInput Char.isDigit}
-      case CleanInput of nil then {Browse 'Please provide a correct number'}
+      case CleanInput of nil then {Browse 'Please provide a correct number'} {Running set(1:false)}
       else
           {Browse {String.toInt CleanInput}}
           {Browse 'We are good'}
           {Infinity {String.toInt CleanInput}}
+          {Running set(1:false)}
       end
    end
 
@@ -658,14 +655,14 @@ define
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(rectangle 50 50 150 150 fill:BGColor outline:BGColor)}
 
-      {C create(text 95 100 font:BigFont text:{Int.toString {Float.toInt 100.0*Ratio}}#"%" width:70 fill:InFill)}
+      {C create(text 95 95 font:BigFont text:{Int.toString {Float.toInt 100.0*Ratio}}#"%" width:70 fill:InFill)}
       {C create(arc 10 10 190 190 fill:BGColor outline:InFill start:220 extent:{Float.toInt ~260.0*Ratio} width:10 style:arc)}
    end
 
    proc {Loader Phase Rot} State in
       {Browse Rot}
       {Running get(1:State)}
-      {D create(arc 10 10 90 90 fill:BGColor outline:BGColor start:(Phase-2)*Rot extent:(Phase-1)*Rot width:13 style:arc)}
+      {D create(arc 10 10 90 90 fill:BGColor outline:BGColor start:(Phase-2)*Rot extent:(Phase-1)*Rot width:15 )}
       if State then
          {D create(arc 10 10 90 90 fill:BGColor outline:BlueNice start:(Phase-1)*Rot extent:Phase*Rot width:11 style:arc)}
          {Delay Rot}
@@ -771,10 +768,10 @@ define
          background:BGColor 
          glue:w
          entry(handle:NgramHandle init:"N (default:2)" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
-         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
+         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in {Loading 100.0} ResultatPress={Press} {Running set(1:false)} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
-         button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
+         %button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
          checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
          )
       canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0))
