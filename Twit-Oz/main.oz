@@ -143,14 +143,10 @@ define
             32|{Clean T}
          else 
             if {Char.isAlpha H} then
-                  if 195==H then
+                  if 195==H | 226=H | 167==H then
                      32|{Clean T}
                   else
-                     if 226==H then
-                        32|{Clean T}
-                     else
-                        H|{Clean T}
-                     end
+                     H|{Clean T}
                   end
             else
                32|{Clean T}
@@ -583,7 +579,6 @@ define
    fun {FindClosest Input ListWord Start Track Diff} Close in
       {Browse Input}
       {Browse ListWord}
-      {Delay 10000}
       if Start > {List.length ListWord} then
             Track
       else
@@ -744,6 +739,8 @@ define
       %{LaunchThreads SeparatedWordsPort NbThreads}
    
       {InputText set(1:"")}
+
+      %%ENDOFCODE%%
    end
 end
 % Appelle la procedure principale

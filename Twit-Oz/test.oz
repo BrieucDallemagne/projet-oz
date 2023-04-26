@@ -11,18 +11,29 @@ fun {SplitMultiple ListInput}
 end
 
 fun {Reducing ListInput}
-    {List.map ListInput fun{$ O}{List.foldL O fun{$ X Y} X+Y end 0} end }
+    {List.sort {List.map ListInput fun{$ O}{List.foldL O fun{$ X Y} X+Y end 0}#O end } fun{$ X Y}X.1 < Y.1 end}
 end
 
-fun {FindClosest Input ListWord Start Track Diff} Close in
-    if Start > {List.length ListWord} then
-        Track
-    else
-        Close={Number.abs {Number.'-' Input {List.nth ListWord Start}}}
-        if Close < Diff then
-            {FindClosest Input ListWord Start+1 Start Close}
+fun {FindClosest Input ListWord Start Track} Close in
+    if {List.nth ListWord Start-1}.1 < Input && Input < Track.1 then
+        if {Number.abs Input-Track.1} < {Number.abs Input-{List.nth ListWord Start-1}.1} then
+            Track
         else
-            {FindClosest Input ListWord Start+1 Track Diff}
+            {List.nth ListWord Start-1}
+        end
+    else
+        if Track.1 < Input && Input < {List.nth ListWord Start+1}.1 then
+            if {Number.abs Input-Track.1} < {Number.abs Input-{list.nth ListWord Start-1}.1} then
+                Track
+            else
+                {List.nth ListWord Start+1}
+            end
+        else
+            if Track.1 > Input then
+                {FindClosest Input ListWord Start-Start/2 {List.nth ListWord Start-Start/2}}
+            else
+                {FindClosest Input ListWord Start+Start/2 {List.nth ListWord Start+Start/2}}
+            end
         end
     end
 end 
@@ -35,8 +46,4 @@ ReducedTest={Reducing Test}
 ReducedWrong={Reducing Wrong}
 {Browse ReducedWrong}
 
-{Browse 'Shortest'}
-{Browse {FindClosest ReducedWrong.1 ReducedTest 1 0 1000}}
-
-TestSecond="âhello"
-{Browse {String.toAtom {Filter TestSecond Char.isAlpha}}}
+{Browse {FindClosest ReducedWrong.1.1 ReducedTest 2 ReducedTest.2.1 }}
