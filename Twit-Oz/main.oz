@@ -323,7 +323,7 @@ define
 
    thread
       %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+      Parsed = {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
    end
 
    
