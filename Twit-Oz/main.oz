@@ -13,7 +13,9 @@ define
    %For QTK
    BGColor=c(242 242 242) % couleur fond
    DarkerBGC=c(230 230 230) % couleur de contraste
+   BlueNice=c(0 114 153)
    Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
+   MidFont={QTk.newFont font(family:"Helvetica" size:15 weight:normal slant:roman underline:false overstrike:false)}
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
    InputText
@@ -31,7 +33,8 @@ define
    Threads
    Akinator={QTk.newImage photo(file:"./Pic/akinator_1_defi.png" format:"png" height:100 width:100)}
    C
-
+   D
+   Running
    
    thread
       NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
@@ -69,7 +72,7 @@ define
    end
 
    %Takes a String, clean and put each word in a list
-      fun {Split Input}
+   fun {Split Input}
          {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
    end
    
@@ -80,7 +83,12 @@ define
    end
 
    fun {Press} Result in
+      %Start to Run
+      {Loading 100.0}
       {PressNgram InputText OutputText {GetN} Result}
+      %Stop Loading
+      {Running set(1:false)}
+
       Result
    end
 
@@ -345,6 +353,7 @@ define
          CleanText1={Split InputText}
          if {List.length CleanText1} < Ngram then
             {Browse 'None'}
+         
             {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
@@ -369,6 +378,7 @@ define
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
                {Browse {FindBiggest WordRecord}}
+
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
                {Browse {FindBiggest WordRecord}}  
@@ -376,6 +386,7 @@ define
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
                {Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
+
                {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
             end
          end
@@ -651,12 +662,37 @@ define
       {C create(arc 10 10 190 190 fill:BGColor outline:InFill start:220 extent:{Float.toInt ~260.0*Ratio} width:10 style:arc)}
    end
 
+   proc {Loader Phase Rot} State in
+      {Browse Rot}
+      {Running get(1:State)}
+      {D create(arc 10 10 90 90 fill:BGColor outline:BGColor start:(Phase-2)*Rot extent:(Phase-1)*Rot width:13 style:arc)}
+      if State then
+         {D create(arc 10 10 90 90 fill:BGColor outline:BlueNice start:(Phase-1)*Rot extent:Phase*Rot width:11 style:arc)}
+         {Delay Rot}
+         if Phase > 360 div Rot then
+            {Loader 0 Rot}
+         else
+            {Loader Phase+1 Rot}
+         end
+      else
+         skip
+      end
+   end
+
+   proc {Loading Time} Fact in
+      Fact=(Time / 1000.0)
+      thread
+         {Running set(1:true)}
+         {Loader 0 {Float.toInt (360.0 * Fact)}}
+      end
+   end
+
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
       Maxsize=maxsize(width:1920 height:1080)
-      Minsize=minsize(width:700 height:380)
+      Minsize=minsize(width:720 height:380)
       %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
 
       HelpMessage="\n This tool has been designed for the class 'LINFO1104'\n \n The purpose of this tool is to provide completion of tweets based on a dataset (here right and far right public figure)\n \n Simply type in the white box something, click result and get the rest of the tweet in the black box\n \n If you want to save your input type CTRL+S and CTRL+SHIFT+S to save it somewhere else \n  repo: https://github.com/BrieucDallemagne/projet-oz"
@@ -696,21 +732,6 @@ define
       proc {Newcommers POPUP}
          {NewWin HelpMessage Desc POPUP R}
       end
-      %Test de la fonction de split les espaces
-      %{Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
-
-      %TestRes={SplitMultiple ReadFiles}
-
-      %CountTest={CountAllWords ReadFiles}
-      %{Browse CountTest}
-
-      %Pickle Test
-      %CountTest={NewDictionary}
-      %TestRes={SplitMultiple ReadFiles}
-      %{TrainingOneWordFiles "the" TestRes CountTest}
-      %{Browse {Dictionary.keys CountTest}}
-      %{DisplayDict CountTest} Décommenter si on veut voir les valeurs
-      %{Browse {FindBiggestDict CountTest}}
 
       % Creation de l interface graphique
       Description=td(
@@ -753,7 +774,10 @@ define
          button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
-         button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)))
+         button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
+         checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
+         )
+      canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
@@ -778,7 +802,7 @@ define
       {InputText set(1:"")}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
-
+      {C create(text 100 160 font:MidFont text:"Probability" width:100)}
       %%ENDOFCODE%%
    end
 end
