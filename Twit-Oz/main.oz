@@ -155,7 +155,7 @@ define
             32|{Clean T}
          else 
             if {Char.isAlpha H} then
-                  if 195==H | 226=H | 167==H then
+                  if H >= 126 then
                      32|{Clean T}
                   else
                      H|{Clean T}
