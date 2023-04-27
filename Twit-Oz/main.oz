@@ -638,10 +638,14 @@ define
          Path={QTk.dialogbox load(initialdir:"./User" title:"Load" filetypes:q(q( "Texte" q(".txt"))) defaultextension:"txt" $)}
          %{Browse {String.toAtom Path}}
       end
-      F={New Open.file init(name:Path flags:[read])}
-      {F read(list:Content size:all)}
-      {F close}
-      {InputText set(1:Content)}
+      if Path==nil then
+         skip
+      else
+         F={New Open.file init(name:Path flags:[read])}
+         {F read(list:Content size:all)}
+         {F close}
+         {InputText set(1:Content)}
+      end
    end
 
    proc {TestImage Occ All} Ratio InFill NewFont in
@@ -802,6 +806,11 @@ define
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(text 100 160 font:MidFont text:"Probability" width:100)}
       {D create(oval 10 10 90 90 fill:BGColor outline:DarkerBGC width:15)}
+
+      %Create the correct folder
+      local PidA  in
+         PidA={OS.system "make folder"}
+      end
       
       %%ENDOFCODE%%
    end
