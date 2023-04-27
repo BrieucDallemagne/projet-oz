@@ -31,4 +31,8 @@ user:
 clean : pickle user
 	rm -f *.ozf
 
+folder:
+	mkdir -p Pickle/Word
+	mkdir Users
+
 .PHONY: clean pickle user
