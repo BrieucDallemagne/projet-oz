@@ -309,7 +309,7 @@ define
          %Because Dictionnary is not supported by pickle in Oz
          Mashed={VirtualString.toString {Mashing Word}}
          {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
-         {Browse 'Finished'}
+         %{Browse 'Finished'}
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
@@ -347,39 +347,39 @@ define
          {InputHandle get(1:InputText)}
          CleanText1={Split InputText}
          if {List.length CleanText1} < Ngram then
-            {Browse 'None'}
+            %{Browse 'None'}
          
             {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
 
-            {Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
+            %{Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
             %Check if the Pickle is already existing
-            {Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
-            {Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
+            %{Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
+            %{Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
             if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-               {Browse 'Exist'}
+               %{Browse 'Exist'}
                WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
-               {Browse WordRecord}
+               %{Browse WordRecord}
             else
-               {Browse 'Working'}
+               %{Browse 'Working'}
                TempDict=a()
                WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
             end
 
-            {Browse WordRecord}
+            %{Browse WordRecord}
             %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
-               {Browse {FindBiggest WordRecord}}
+               %{Browse {FindBiggest WordRecord}}
 
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               {Browse {FindBiggest WordRecord}}  
+               %{Browse {FindBiggest WordRecord}}  
                PlaceHolder={FindBiggest WordRecord}
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
-               {Browse Result}
+               %{Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
 
                {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
@@ -479,7 +479,7 @@ define
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
 
-      {Browse 'Updating'}
+      %{Browse 'Updating'}
       {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
@@ -545,7 +545,7 @@ define
          Result={Press}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
-         {Browse Num}
+         %{Browse Num}
          {Infinity Num-1}
       end
    end
@@ -556,8 +556,8 @@ define
       CleanInput={List.filter UserInput Char.isDigit}
       case CleanInput of nil then {Browse 'Please provide a correct number'} {Running set(1:false)}
       else
-          {Browse {String.toInt CleanInput}}
-          {Browse 'We are good'}
+          %{Browse {String.toInt CleanInput}}
+          %{Browse 'We are good'}
           {Infinity {String.toInt CleanInput}}
           {Running set(1:false)}
       end
@@ -574,7 +574,7 @@ define
 
    proc {Save} F Input Ecrit in %To Save input 
       {OutputText get(1:Input)}
-      {Browse Input}
+      %{Browse Input}
       F={New Open.file init(name:"User/"#{Mashing {Split Input}}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
       %{F write(vs:Input len:{List.length Input})}
       %{F write(vs:"Test" len:4)}
@@ -595,8 +595,8 @@ define
    end
    
    fun {FindClosest Input ListWord Start Track Diff} Close in
-      {Browse Input}
-      {Browse ListWord}
+      %{Browse Input}
+      %{Browse ListWord}
       if Start > {List.length ListWord} then
             Track
       else
@@ -627,7 +627,7 @@ define
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
       CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
-      {Browse CorrectWord}
+      %{Browse CorrectWord}
       {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
       {OutputText set(1:{List.tokens {Mashing Result} & })}
@@ -636,7 +636,7 @@ define
    proc {OpenDialog} Path F Content in
       thread
          Path={QTk.dialogbox load(initialdir:"./User" title:"Load" filetypes:q(q( "Texte" q(".txt"))) defaultextension:"txt" $)}
-         {Browse {String.toAtom Path}}
+         %{Browse {String.toAtom Path}}
       end
       F={New Open.file init(name:Path flags:[read])}
       {F read(list:Content size:all)}
@@ -650,7 +650,7 @@ define
       NewFont={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
       Ratio={Int.toFloat Occ} / {Int.toFloat All} %Number/All
       InFill=c({Float.toInt (1.0-Ratio)*255.0} {Float.toInt Ratio*255.0} 0)
-      {Browse Ratio}
+      %{Browse Ratio}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(rectangle 50 50 150 150 fill:BGColor outline:BGColor)}
@@ -660,11 +660,11 @@ define
    end
 
    proc {Loader Phase Rot} State in
-      {Browse Rot}
+      %{Browse Rot}
       {Running get(1:State)}
-      {D create(arc 10 10 90 90 fill:BGColor outline:BGColor start:(Phase-2)*Rot extent:(Phase-1)*Rot width:15 )}
+      {D create(arc 12 12 88 88 fill:BGColor outline:DarkerBGC start:(Phase-2)*Rot-2 extent:Rot+2 width:16 style:arc)}
       if State then
-         {D create(arc 10 10 90 90 fill:BGColor outline:BlueNice start:(Phase-1)*Rot extent:Phase*Rot width:11 style:arc)}
+         {D create(arc 10 10 90 90 fill:BGColor outline:BlueNice start:(Phase-1)*Rot extent:Rot width:11 style:arc)}
          {Delay Rot}
          if Phase > 360 div Rot then
             {Loader 0 Rot}
@@ -681,6 +681,7 @@ define
       thread
          {Running set(1:true)}
          {Loader 0 {Float.toInt (360.0 * Fact)}}
+         {D create(oval 10 10 90 90 fill:BGColor outline:DarkerBGC width:15)}
       end
    end
 
@@ -800,6 +801,8 @@ define
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(text 100 160 font:MidFont text:"Probability" width:100)}
+      {D create(oval 10 10 90 90 fill:BGColor outline:DarkerBGC width:15)}
+      
       %%ENDOFCODE%%
    end
 end
