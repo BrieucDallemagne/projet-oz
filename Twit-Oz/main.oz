@@ -13,7 +13,9 @@ define
    %For QTK
    BGColor=c(242 242 242) % couleur fond
    DarkerBGC=c(230 230 230) % couleur de contraste
+   BlueNice=c(0 114 153)
    Font={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
+   MidFont={QTk.newFont font(family:"Helvetica" size:15 weight:normal slant:roman underline:false overstrike:false)}
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
    InputText
@@ -31,7 +33,8 @@ define
    Threads
    Akinator={QTk.newImage photo(file:"./Pic/akinator_1_defi.png" format:"png" height:100 width:100)}
    C
-
+   D
+   Running
    
    thread
       NumberWord={Pickle.load 'Pickle/NumberWord.ozp'} % à généraliser pour tout système
@@ -69,7 +72,7 @@ define
    end
 
    %Takes a String, clean and put each word in a list
-      fun {Split Input}
+   fun {Split Input}
          {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
    end
    
@@ -306,7 +309,7 @@ define
          %Because Dictionnary is not supported by pickle in Oz
          Mashed={VirtualString.toString {Mashing Word}}
          {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
-         {Browse 'Finished'}
+         %{Browse 'Finished'}
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
@@ -344,38 +347,41 @@ define
          {InputHandle get(1:InputText)}
          CleanText1={Split InputText}
          if {List.length CleanText1} < Ngram then
-            {Browse 'None'}
+            %{Browse 'None'}
+         
             {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
 
-            {Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
+            %{Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
             %Check if the Pickle is already existing
-            {Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
-            {Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
+            %{Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
+            %{Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
             if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-               {Browse 'Exist'}
+               %{Browse 'Exist'}
                WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
-               {Browse WordRecord}
+               %{Browse WordRecord}
             else
-               {Browse 'Working'}
+               %{Browse 'Working'}
                TempDict=a()
                WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
             end
 
-            {Browse WordRecord}
+            %{Browse WordRecord}
             %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
             case {FindBiggest WordRecord} of nil then    
-               {Browse {FindBiggest WordRecord}}
+               %{Browse {FindBiggest WordRecord}}
+
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               {Browse {FindBiggest WordRecord}}  
+               %{Browse {FindBiggest WordRecord}}  
                PlaceHolder={FindBiggest WordRecord}
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
-               {Browse Result}
+               %{Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
+
                {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
             end
          end
@@ -473,7 +479,7 @@ define
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
 
-      {Browse 'Updating'}
+      %{Browse 'Updating'}
       {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
@@ -539,19 +545,21 @@ define
          Result={Press}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
-         {Browse Num}
+         %{Browse Num}
          {Infinity Num-1}
       end
    end
 
    proc {ButtonInfinity} UserInput CleanInput in
+      {Loading 100.0}
       {InfiniteInput get(1:UserInput)}
       CleanInput={List.filter UserInput Char.isDigit}
-      case CleanInput of nil then {Browse 'Please provide a correct number'}
+      case CleanInput of nil then {Browse 'Please provide a correct number'} {Running set(1:false)}
       else
-          {Browse {String.toInt CleanInput}}
-          {Browse 'We are good'}
+          %{Browse {String.toInt CleanInput}}
+          %{Browse 'We are good'}
           {Infinity {String.toInt CleanInput}}
+          {Running set(1:false)}
       end
    end
 
@@ -566,7 +574,7 @@ define
 
    proc {Save} F Input Ecrit in %To Save input 
       {OutputText get(1:Input)}
-      {Browse Input}
+      %{Browse Input}
       F={New Open.file init(name:"User/"#{Mashing {Split Input}}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
       %{F write(vs:Input len:{List.length Input})}
       %{F write(vs:"Test" len:4)}
@@ -587,8 +595,8 @@ define
    end
    
    fun {FindClosest Input ListWord Start Track Diff} Close in
-      {Browse Input}
-      {Browse ListWord}
+      %{Browse Input}
+      %{Browse ListWord}
       if Start > {List.length ListWord} then
             Track
       else
@@ -619,7 +627,7 @@ define
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
       CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
-      {Browse CorrectWord}
+      %{Browse CorrectWord}
       {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
       {OutputText set(1:{List.tokens {Mashing Result} & })}
@@ -628,7 +636,7 @@ define
    proc {OpenDialog} Path F Content in
       thread
          Path={QTk.dialogbox load(initialdir:"./User" title:"Load" filetypes:q(q( "Texte" q(".txt"))) defaultextension:"txt" $)}
-         {Browse {String.toAtom Path}}
+         %{Browse {String.toAtom Path}}
       end
       F={New Open.file init(name:Path flags:[read])}
       {F read(list:Content size:all)}
@@ -642,13 +650,39 @@ define
       NewFont={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
       Ratio={Int.toFloat Occ} / {Int.toFloat All} %Number/All
       InFill=c({Float.toInt (1.0-Ratio)*255.0} {Float.toInt Ratio*255.0} 0)
-      {Browse Ratio}
+      %{Browse Ratio}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(rectangle 50 50 150 150 fill:BGColor outline:BGColor)}
 
-      {C create(text 95 100 font:BigFont text:{Int.toString {Float.toInt 100.0*Ratio}}#"%" width:70 fill:InFill)}
+      {C create(text 95 95 font:BigFont text:{Int.toString {Float.toInt 100.0*Ratio}}#"%" width:70 fill:InFill)}
       {C create(arc 10 10 190 190 fill:BGColor outline:InFill start:220 extent:{Float.toInt ~260.0*Ratio} width:10 style:arc)}
+   end
+
+   proc {Loader Phase Rot} State in
+      %{Browse Rot}
+      {Running get(1:State)}
+      {D create(arc 12 12 88 88 fill:BGColor outline:DarkerBGC start:(Phase-2)*Rot-2 extent:Rot+2 width:16 style:arc)}
+      if State then
+         {D create(arc 10 10 90 90 fill:BGColor outline:BlueNice start:(Phase-1)*Rot extent:Rot width:11 style:arc)}
+         {Delay Rot}
+         if Phase > 360 div Rot then
+            {Loader 0 Rot}
+         else
+            {Loader Phase+1 Rot}
+         end
+      else
+         skip
+      end
+   end
+
+   proc {Loading Time} Fact in
+      Fact=(Time / 1000.0)
+      thread
+         {Running set(1:true)}
+         {Loader 0 {Float.toInt (360.0 * Fact)}}
+         {D create(oval 10 10 90 90 fill:BGColor outline:DarkerBGC width:15)}
+      end
    end
 
 
@@ -656,7 +690,7 @@ define
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
       Maxsize=maxsize(width:1920 height:1080)
-      Minsize=minsize(width:700 height:380)
+      Minsize=minsize(width:720 height:380)
       %ICO=bitmap(url:"https://cdn.discordapp.com/attachments/590178963477757972/1092545816339697674/twitozICO.xbm") Faire fonctionner ce truc
 
       HelpMessage="\n This tool has been designed for the class 'LINFO1104'\n \n The purpose of this tool is to provide completion of tweets based on a dataset (here right and far right public figure)\n \n Simply type in the white box something, click result and get the rest of the tweet in the black box\n \n If you want to save your input type CTRL+S and CTRL+SHIFT+S to save it somewhere else \n  repo: https://github.com/BrieucDallemagne/projet-oz"
@@ -696,21 +730,6 @@ define
       proc {Newcommers POPUP}
          {NewWin HelpMessage Desc POPUP R}
       end
-      %Test de la fonction de split les espaces
-      %{Browse {String.toAtom {ByteString.toString {Split {ByteString.make {String.toAtom ReadFiles.1}} 0}.2.1}}}
-
-      %TestRes={SplitMultiple ReadFiles}
-
-      %CountTest={CountAllWords ReadFiles}
-      %{Browse CountTest}
-
-      %Pickle Test
-      %CountTest={NewDictionary}
-      %TestRes={SplitMultiple ReadFiles}
-      %{TrainingOneWordFiles "the" TestRes CountTest}
-      %{Browse {Dictionary.keys CountTest}}
-      %{DisplayDict CountTest} Décommenter si on veut voir les valeurs
-      %{Browse {FindBiggestDict CountTest}}
 
       % Creation de l interface graphique
       Description=td(
@@ -750,18 +769,20 @@ define
          background:BGColor 
          glue:w
          entry(handle:NgramHandle init:"N (default:2)" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
-         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in ResultatPress={Press} end key:"Return")
+         button(glue:w text:"Predict" init:"Result" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:proc{$} ResultatPress in {Loading 100.0} ResultatPress={Press} {Running set(1:false)} end key:"Return")
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
-         button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)))
+         %button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
+         checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
+         )
+      canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0))
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
       message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w)
-      canvas(handle:C height:200 width:200 background:BGColor borderwidth:0))
+      canvas(handle:C height:200 width:200 background:BGColor borderwidth:0 highlightthickness:0))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
-
 
       % Creation de la fenetre
       Window={QTk.build Description}
@@ -778,6 +799,10 @@ define
    
       {InputText set(1:"")}
 
+      {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
+      {C create(text 100 160 font:MidFont text:"Probability" width:100)}
+      {D create(oval 10 10 90 90 fill:BGColor outline:DarkerBGC width:15)}
+      
       %%ENDOFCODE%%
    end
 end
