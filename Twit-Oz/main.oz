@@ -22,6 +22,7 @@ define
    OutputText
    InfiniteInput
    Parsed
+   ListFile
    NumberWord
    DataBase
    N % le N de N-gramme
@@ -307,8 +308,13 @@ define
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         Mashed={VirtualString.toString {Mashing Word}}
-         {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
+         try
+            Mashed={VirtualString.toString {Mashing Word}}
+            {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
+         catch X then
+            skip
+         end
+         
          %{Browse 'Finished'}
          Acc
       [] H|T then
@@ -339,7 +345,7 @@ define
    end
 
    
-   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc in
+   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
       else
@@ -358,14 +364,28 @@ define
             %Check if the Pickle is already existing
             %{Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
             %{Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
-            if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-               %{Browse 'Exist'}
-               WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
-               %{Browse WordRecord}
+            try %To Handle missing directory and inginious issue
+               _={List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}}
+               Dir=true
+            catch X then
+               %{Browse '** '#X#' **'}
+               {Browse 'No directory found'}
+               Dir=false
+            end
+            {Browse Dir}
+            if Dir then
+               if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
+                  %{Browse 'Exist'}
+                  WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
+                  %{Browse WordRecord}
+               else
+                  %{Browse 'Working'}
+                  TempDict=a()
+                  WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+               end
             else
-               %{Browse 'Working'}
                TempDict=a()
-               WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+                  WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
             end
 
             %{Browse WordRecord}
@@ -763,9 +783,7 @@ define
       tearoff:false
       %local han in
          %han = {New POPUP}
-      command(text:"Newcommers"  foreground:black action:proc{$} Pop=POPUP in thread {Newcommers Pop} end end)
-      %end
-      command(text:"About" foreground:black )))) %action:proc{$} {Extra.Test} end
+      command(text:"About"  foreground:black action:proc{$} Pop=POPUP Win=Newcommers in {Win Pop} end)))) %action:proc{$} {Extra.Test} end
       lr(background:BGColor 
       glue:nw
       text(handle:InputText init:"Type a Tweet" width:50 height:10 background:white foreground:black wrap:word glue:nw insertbackground:black) 
@@ -779,7 +797,9 @@ define
          %button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
          checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
          )
-      canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0))
+      canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0 padx:10)
+      %listbox(init:[a b c d] handle:ListFile)
+      )
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
