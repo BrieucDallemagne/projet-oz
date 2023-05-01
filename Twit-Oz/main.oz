@@ -344,6 +344,17 @@ define
       Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
    end
 
+   %take a list of string ["hello" "world"] and output "hello world"
+   fun {BuildSentence StringList}
+      case StringList of nil then nil
+      [] H|T then
+         if T == nil then
+            H
+         else
+            H#" "#{BuildSentence T}
+         end
+      end
+   end
    
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir in
       if Ngram =< 0 then
@@ -351,7 +362,7 @@ define
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={Split InputText}
+         CleanText1={Split {Clean InputText}}
          if {List.length CleanText1} < Ngram then
             %{Browse 'None'}
          
@@ -372,7 +383,7 @@ define
                {Browse 'No directory found'}
                Dir=false
             end
-            {Browse Dir}
+            
             if Dir then
                if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
                   %{Browse 'Exist'}
@@ -401,8 +412,9 @@ define
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
                %{Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
-
-               {OutputHandle set(1:{Clean InputText}#" "#PlaceHolder)} %{FindBiggestDict Dict}
+               
+               {OutputHandle set(1:{BuildSentence CleanText1}#" "#PlaceHolder)}
+            
             end
          end
       end
