@@ -155,14 +155,18 @@ define
          if {Char.isCntrl H} then
             32|{Clean T}
          else 
-            if {Char.isAlpha H} then
+            if {Char.isAlNum H} then
                   if H >= 126 then
                      32|{Clean T}
                   else
                      H|{Clean T}
                   end
             else
-               32|{Clean T}
+               if {Char.isPunct H} then
+                  32|H|{Clean T} %So punctuation is like a word
+               else
+                  32|{Clean T}
+               end
             end
          end
       end
@@ -383,7 +387,7 @@ define
                {Browse 'No directory found'}
                Dir=false
             end
-            
+
             if Dir then
                if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
                   %{Browse 'Exist'}
