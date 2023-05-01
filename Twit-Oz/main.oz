@@ -18,6 +18,7 @@ define
    MidFont={QTk.newFont font(family:"Helvetica" size:15 weight:normal slant:roman underline:false overstrike:false)}
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
+   SpiceHandle
    InputText
    OutputText
    InfiniteInput
@@ -360,7 +361,7 @@ define
       end
    end
    
-   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir in
+   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
       else
@@ -406,17 +407,24 @@ define
             %{Browse WordRecord}
             %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
-            case {FindBiggest WordRecord} of nil then    
+            BigWord={FindBiggest WordRecord}
+            case BigWord of nil then    
                %{Browse {FindBiggest WordRecord}}
 
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               %{Browse {FindBiggest WordRecord}}  
-               PlaceHolder={FindBiggest WordRecord}
+               %{Browse {FindBiggest WordRecord}}
+               {SpiceHandle get(1:SpiceTest)}
+
+               if SpiceTest then
+                  PlaceHolder={List.nth {Record.toListInd WordRecord} 1+{OS.rand} mod {Record.width WordRecord}}.1
+               else
+                  PlaceHolder=BigWord
+               end
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
                %{Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
-               
+
                {OutputHandle set(1:{BuildSentence CleanText1}#" "#PlaceHolder)}
             
             end
@@ -811,7 +819,10 @@ define
          button(glue:w text:"Infinity" init:"Infinity" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:ButtonInfinity)
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
          %button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
-         checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
+         lr(
+            checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
+            checkbutton(text:"Randomizer" handle:SpiceHandle init:false background:BGColor foreground:black)
+         )
          )
       canvas(handle:D height:100 width:100 background:BGColor borderwidth:0 highlightthickness:0 padx:10)
       %listbox(init:[a b c d] handle:ListFile)
