@@ -40,8 +40,8 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   fun {TrainingWord Word File Acc Track} Size Retrieve Inc Name in
-
+   fun {TrainingWord Word File Acc Track} Retrieve Name in
+      %{Browse File}
 
       case File of nil then 
          Acc
@@ -62,13 +62,12 @@ define
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   fun {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
+   fun {TrainingWordFiles Word Files Acc N} NewAcc in
       %Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
          
-         %{Browse 'Finished'}
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
@@ -112,7 +111,7 @@ define
   end
   
    %Take a Record and return the biggest key for its value
-   fun {FindBiggest Input} Temp in
+   fun {FindBiggest Input}
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
@@ -135,38 +134,42 @@ define
       {Browser.browse Buf}
    end
 
-      %Takes a String and remove all non Ascii Character
-      fun {Clean Input}
-         case Input of nil then nil
-         [] H|T then 
-            if {Char.isCntrl H} then
-               32|{Clean T}
-            else 
-               if {Char.isAlNum H} then
-                     if H >= 126 then
-                        32|{Clean T}
-                     else
-                        {Char.toLower H}|{Clean T}
-                     end
+   %Takes a String and remove all non Ascii Character
+   fun {Clean Input}
+      case Input of nil then nil
+      [] H|T then 
+         if {Char.isCntrl H} then
+            32|46|{Clean T}
+         else 
+            if {Char.isAlNum H} then
+                  if H >= 126 then
+                     32|{Clean T}
+                  else
+                     {Char.toLower H}|{Clean T}
+                  end
+            else
+               if {Char.isPunct H} then
+                  32|H|{Clean T}
                else
                   32|{Clean T}
                end
             end
          end
       end
+   end
 
 
 
-   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes Occu PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
+   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last TempDict Occu WordRecord BigWord TPMResult in
       if Ngram =< 0 then
-         {Browse 'There is no word like this'}
+         %{Browse 'There is no word like this'}
          Result=[[nil] 0]
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={Split {Clean InputText}}
+         CleanText1={List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}
+         %{Browse CleanText1}
          if {List.length CleanText1} < Ngram then
-            %{Browse 'None'}
          
             %{PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
             Result=[[nil] 0]
@@ -176,18 +179,23 @@ define
             TempDict=a()
             WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
 
-            %{Browse WordRecord}
             %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
             BigWord={FindBiggest WordRecord}
             case BigWord of nil then    
-               %{Browse {FindBiggest WordRecord}}
-
-               {PressNgram InputHandle OutputHandle Ngram-1 Result}
+               Result=[[nil] 0]
+               %{PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
                Occu={Value.'.' WordRecord BigWord}
-               Result=[{List.filter {Record.arity WordRecord} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
-               {OutputHandle set(1:BigWord)}
+               TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
+
+               if TPMResult.1 == nil then
+                  Result=[[nil] 0]
+               else
+                  Result=TPMResult
+                  {OutputHandle set(1:BigWord)}
+               end               
+
             
             end
          end
@@ -207,9 +215,8 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    fun {Press} Result in
-      %{Browse Parsed}
       {PressNgram InputText OutputText 2 Result}
-      {Browse Result}
+      %{Browse Result}
       Result
    end
    

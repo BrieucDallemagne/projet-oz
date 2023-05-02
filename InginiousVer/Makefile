@@ -18,5 +18,9 @@ all : $(ENTRY_POINT)
 run: $(ENTRY_POINT) 
 	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER)
 
+test: 
+	ozengine main.ozf --folder "test"
 clean :
 	rm -f *.ozf
+
+.PHONY: test
