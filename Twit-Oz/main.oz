@@ -19,6 +19,8 @@ define
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
    SpiceHandle
+   CombinedData
+   ResultatPort
    Files
    NumFiles
    FilesPerThread
@@ -103,11 +105,7 @@ define
    end
 
    proc {DataThread Files Port}
-      thread
-         Parsed =  {List.map{OpenMultipleFile Files} Clean}
-      end
-      {Send Port Parsed}
-      %thread {Send Port {List.map{OpenMultipleFile Files} Clean}} end
+      thread {Send Port {List.map{OpenMultipleFile Files} Clean}} end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Port}
@@ -118,7 +116,6 @@ define
       in
          if I == 0 then skip 
          else
-            {Browse 1}
             StartIndex = (I - 1) * FilesPerThread + 1
             EndIndex = I * FilesPerThread
             ThreadFiles = {List.take Files EndIndex}
@@ -387,11 +384,11 @@ define
                else
                   %{Browse 'Working'}
                   TempDict=a()
-                  WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+                  WordRecord={TrainingWordFiles Last CombinedData TempDict Ngram}
                end
             else
                TempDict=a()
-                  WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+                  WordRecord={TrainingWordFiles Last CombinedData TempDict Ngram}
             end
 
             %{Browse WordRecord}
@@ -603,7 +600,7 @@ define
 
 
    proc {FullGram}
-      {FullGramHelper {GetN} Parsed}
+      {FullGramHelper {GetN} CombinedData}
    end
 
    proc {Save} F Input Ecrit in %To Save input 
@@ -660,7 +657,7 @@ define
 
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
-      CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
+      CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsed
       %{Browse CorrectWord}
       {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
@@ -836,9 +833,8 @@ define
       SeparatedWordsPort = {NewPort SeparatedWordsStream}
       NbThreads = 4
       {LaunchThreads SeparatedWordsPort NbThreads}
-      
-      CombinedData = nil
-   
+      CombinedData = SeparatedWordsStream
+      {Browse 1}
       {InputText set(1:"")}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
