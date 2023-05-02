@@ -5,7 +5,7 @@ cd tweets
 for n in {1..208};
 do
     echo $n
-    cat part_$n.txt | grep 'The Apprentice will be on Thursdays '
+    cat part_$n.txt | grep 'this is according'
     Val=$(cat part_$n.txt | wc --words)
     Quant=$(($Val + $Quant))
 done

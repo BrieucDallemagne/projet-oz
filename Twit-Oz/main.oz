@@ -176,7 +176,7 @@ define
 
    %Read a file. File is the name of the file
    fun {ReadFile File} F Res in
-      F={New Open.file init(name:"tweets/"#{String.toAtom File} flags:[read])}
+      F={New Open.file init(name:{GetSentenceFolder}#"/"#{String.toAtom File} flags:[read])}
       {F read(list:Res size:all)} % set size to all to read the whole text
       {F close}
       Res
@@ -364,6 +364,7 @@ define
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
       if Ngram =< 0 then
          {Browse 'There is no word like this'}
+         Result=[[nil] 0]
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
