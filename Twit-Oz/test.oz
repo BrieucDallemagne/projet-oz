@@ -1,8 +1,4 @@
 declare
-
-A=1
-B=2
-Ratio={Int.toFloat A} / {Int.toFloat B} %Number/All
-InFill=c({Float.toInt (1.0-Ratio)*255.0} {Float.toInt Ratio*255.0} 0)
-Test={Float.toInt ~260.0*Ratio}
-{Browse Test}
+L = [1 2 3 4 5]    % la liste d'origine
+S = {List.slice L 2 4}   % la sous-liste contenant les éléments de la deuxième à la quatrième place
+{Browse S}           % affiche la sous-liste

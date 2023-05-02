@@ -19,6 +19,11 @@ define
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
    SpiceHandle
+   Files
+   NumFiles
+   FilesPerThread
+   SubList
+   GetDir
    InputText
    OutputText
    InfiniteInput
@@ -97,50 +102,40 @@ define
       Args.'folder'
    end
 
-   %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-   %%% Les threads de parsing envoient leur resultat au port Port
-   % ["path1" "path2" "path3"] avec 2 --> [["path1" "path2"] ["path3"]]
-   fun {SplitList L N} Size in
-      if N == 0 then
-         nil
-      else
-         Size =  {List.length L} div N
-         {List.take L Size} | {SplitList {List.drop L Size} N-1}
+   proc {DataThread Files Port}
+      thread
+         Parsed =  {List.map{OpenMultipleFile Files} Clean}
+      end
+      {Send Port Parsed}
+      %thread {Send Port {List.map{OpenMultipleFile Files} Clean}} end
+   end
+
+   proc {Rec I FilesPerThread NumFiles Files Port}
+      local
+         StartIndex 
+         EndIndex 
+         ThreadFiles 
+      in
+         if I == 0 then skip 
+         else
+            {Browse 1}
+            StartIndex = (I - 1) * FilesPerThread + 1
+            EndIndex = I * FilesPerThread
+            ThreadFiles = {List.take Files EndIndex}
+            {DataThread ThreadFiles Port}
+            {Rec I-1 FilesPerThread NumFiles Files Port }
+         end
       end
    end
 
-   fun {OpenAndParseFiles Files} 
-      {Map Files fun {$ F} {SplitMultiple {List.map {OpenMultipleFile F} Clean}} end}
-   end
-
-   proc {CreateThreadsAndParseFiles SeparatedWordsPort Files NThreads} 
-
-      {List.forAll {SplitList Files NThreads}
-                     proc {$ FilesChunk}
-                        Thread
-                     in
-                        thread 
-                           {Port.send SeparatedWordsPort {OpenAndParseFiles FilesChunk}}
-                        end
-                     
-                     end}
-      for T in SeparatedWordsPort do {Thread.join T} end
-   end
-
-   proc {LaunchThreads SeparatedWordsPort NbThreads}
-      % Liste des fichiers
+   proc {LaunchThreads Port NbThreads}
+   
       Files = {OS.getDir {GetSentenceFolder}}
-
-      % Création des threads et traitement des fichiers
-      {CreateThreadsAndParseFiles SeparatedWordsPort Files NbThreads} %ca bloque
-      % Recevoir les résultats des threads
-      for _ in 1..NbThreads do
-         SeparatedWords = {Port.receive SeparatedWordsPort}
-         % Traitement des résultats, par exemple les fusionner
-      end
+   
+      NumFiles = {List.length Files}
+      FilesPerThread = NumFiles div NbThreads
+      {Rec NbThreads FilesPerThread NumFiles Files Port}
    end
-
-   %%% Ajouter vos fonctions et procédures auxiliaires ici
 
    %To create a pop-up window displaying some text
    proc {NewWin Message Inside Handle Return}
@@ -344,11 +339,6 @@ define
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
-   thread
-      %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed = {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
-   end
-
    %take a list of string ["hello" "world"] and output "hello world"
    fun {BuildSentence StringList}
       case StringList of nil then nil
@@ -359,7 +349,7 @@ define
             H#" "#{BuildSentence T}
          end
       end
-   end
+   end   
    
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
       if Ngram =< 0 then
@@ -413,7 +403,7 @@ define
 
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               %{Browse {FindBiggest WordRecord}}
+               %{Browse {FindBiggest WordRecord}}  
                {SpiceHandle get(1:SpiceTest)}
 
                if SpiceTest then
@@ -769,7 +759,7 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another Newcommers in
+      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another Newcommers CombinedData ReceivedData in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
@@ -820,7 +810,7 @@ define
          entry(handle:InfiniteInput init:"Amount" width:10 font:Font background:white glue:w  padx:30 pady:3 foreground:black insertbackground:black)
          %button(glue:w text:"Correct" init:"Correct" padx:10 pady:3 foreground:black bg:DarkerBGC width:15 action:CorrectInput)
          lr(
-            checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
+         checkbutton(text:"Running" handle:Running init:false background:BGColor foreground:black)
             checkbutton(text:"Randomizer" handle:SpiceHandle init:false background:BGColor foreground:black)
          )
          )
@@ -845,8 +835,9 @@ define
       % On lance les threads de lecture et de parsing
       SeparatedWordsPort = {NewPort SeparatedWordsStream}
       NbThreads = 4
-      % Décommentez moi quand la fonction de Thread fonctionne
-      %{LaunchThreads SeparatedWordsPort NbThreads}
+      {LaunchThreads SeparatedWordsPort NbThreads}
+      
+      CombinedData = nil
    
       {InputText set(1:"")}
 
