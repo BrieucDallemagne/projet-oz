@@ -15,6 +15,7 @@ define
    thread
       %Permet de lire tous les fichiers et fait des listes de mots
       Parsed={List.map {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O} nil|nil|O end}%Contains the parsed documents
+      {Browse Parsed}
    end
 
 
@@ -41,7 +42,7 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   fun {TrainingWord Word File Acc Track} Retrieve Name in
+   fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
       %{Browse File}
 
       case File of nil then 
@@ -50,15 +51,16 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {TrainingWord Word T {Record.adjoin Acc a(Name : Retrieve)} 1}
+            {Browse {List.take PassFile 1}.1|H|T}
+            {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
             if H=={List.nth Word Track} then
-                  {TrainingWord Word T Acc Track+1}
+                  {TrainingWord Word T H|PassFile Acc Track+1}
             else
                if Track > 1 then
-                  {TrainingWord Word H|T Acc 1}
+                  {TrainingWord Word H|T PassFile Acc 1}
                else
-                  {TrainingWord Word T Acc 1}
+                  {TrainingWord Word T H|PassFile Acc 1}
                end
             end
          end
@@ -75,7 +77,7 @@ define
          
          Acc
       [] H|T then
-         NewAcc={TrainingWord Word H Acc 1} 
+         NewAcc={TrainingWord Word H nil Acc 1} 
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -148,7 +150,7 @@ define
       case Input of nil then nil
       [] H|T then 
          if {Char.isCntrl H} then
-            32|46|{Clean T}
+            32|46|32|{Clean T}
          else 
             if {Char.isAlNum H} then
                   if H >= 126 then
@@ -158,7 +160,7 @@ define
                   end
             else
                if {Char.isPunct H} then
-                  32|H|{Clean T}
+                  32|H|32|{Clean T}
                else
                   32|{Clean T}
                end
@@ -182,6 +184,8 @@ define
 
          TempDict=a()
          WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+
+         {Browse WordRecord}
 
          %Add the true Pickle loading with concatenation 
          %create a search inside a tuple
