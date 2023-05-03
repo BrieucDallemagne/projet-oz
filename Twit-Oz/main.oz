@@ -105,7 +105,7 @@ define
    end
 
    proc {DataThread Files Port}
-      thread {Send Port {List.map{OpenMultipleFile Files} Clean}} end
+      thread {Send Port {OpenMultipleFile Files} } end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Port}
@@ -833,6 +833,7 @@ define
       SeparatedWordsPort = {NewPort SeparatedWordsStream}
       NbThreads = 4
       {LaunchThreads SeparatedWordsPort NbThreads}
+      {Browse SeparatedWordsStream}
       CombinedData = SeparatedWordsStream
       {Browse 1}
       {InputText set(1:"")}
