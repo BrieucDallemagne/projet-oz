@@ -14,7 +14,7 @@ define
 
    thread
       %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+      Parsed={List.map {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O} nil|nil|O end}%Contains the parsed documents
    end
 
 
@@ -27,7 +27,7 @@ define
    %Use {ClusterMaker}
    fun {SubCluster Input Start Num} Res in
       if {List.length Input} < Num then
-         {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
+         {SubCluster nil|Input Start Num}
       else
          if {List.length Input}<Start+Num then
             nil
@@ -37,6 +37,7 @@ define
          end
       end
    end
+
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
@@ -54,7 +55,11 @@ define
             if H=={List.nth Word Track} then
                   {TrainingWord Word T Acc Track+1}
             else
+               if Track > 1 then
+                  {TrainingWord Word H|T Acc 1}
+               else
                   {TrainingWord Word T Acc 1}
+               end
             end
          end
 
@@ -103,7 +108,11 @@ define
       case List of nil then Name
       [] H|T then
           if H.2 > Max then
-              {FindBiggestHelper T H.1 H.2}
+               if {Char.isPunct {Atom.toString H.1}.1} then
+                  {FindBiggestHelper T Name Max}
+               else
+                  {FindBiggestHelper T H.1 H.2}
+               end
           else
               {FindBiggestHelper T Name Max}
           end
@@ -168,36 +177,30 @@ define
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}
-         %{Browse CleanText1}
-         if {List.length CleanText1} < Ngram then
-         
-            %{PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
+         CleanText={ClusterMaker CleanText1 0 Ngram}
+         Last={List.last CleanText}
+
+         TempDict=a()
+         WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+
+         %Add the true Pickle loading with concatenation 
+         %create a search inside a tuple
+         BigWord={FindBiggest WordRecord}
+         case BigWord of nil then    
             Result=[[nil] 0]
+            %{PressNgram InputHandle OutputHandle Ngram-1 Result}
          else
-            CleanText={ClusterMaker CleanText1 0 Ngram}
-            Last={List.last CleanText}
-            TempDict=a()
-            WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+            Occu={Value.'.' WordRecord BigWord}
+            TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
 
-            %Add the true Pickle loading with concatenation 
-            %create a search inside a tuple
-            BigWord={FindBiggest WordRecord}
-            case BigWord of nil then    
+            if TPMResult.1 == nil then
                Result=[[nil] 0]
-               %{PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               Occu={Value.'.' WordRecord BigWord}
-               TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
+               Result=TPMResult
+               {OutputHandle set(1:BigWord)}
+            end               
 
-               if TPMResult.1 == nil then
-                  Result=[[nil] 0]
-               else
-                  Result=TPMResult
-                  {OutputHandle set(1:BigWord)}
-               end               
-
-            
-            end
+         
          end
       end
    end
@@ -216,7 +219,7 @@ define
    %%%                  <probability/frequence> := <int> | <float>
    fun {Press} Result in
       {PressNgram InputText OutputText 2 Result}
-      %{Browse Result}
+      {Browse Result}
       Result
    end
    
