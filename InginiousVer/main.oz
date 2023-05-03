@@ -14,7 +14,8 @@ define
 
    thread
       %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+      Parsed={List.map {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O} nil|nil|O end}%Contains the parsed documents
+      {Browse Parsed}
    end
 
 
@@ -27,7 +28,7 @@ define
    %Use {ClusterMaker}
    fun {SubCluster Input Start Num} Res in
       if {List.length Input} < Num then
-         {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
+         {SubCluster nil|Input Start Num}
       else
          if {List.length Input}<Start+Num then
             nil
@@ -38,9 +39,10 @@ define
       end
    end
 
+
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   fun {TrainingWord Word File Acc Track} Retrieve Name in
+   fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
       %{Browse File}
 
       case File of nil then 
@@ -49,12 +51,17 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {TrainingWord Word T {Record.adjoin Acc a(Name : Retrieve)} 1}
+            {Browse {List.take PassFile 1}.1|H|T}
+            {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
             if H=={List.nth Word Track} then
-                  {TrainingWord Word T Acc Track+1}
+                  {TrainingWord Word T H|PassFile Acc Track+1}
             else
-                  {TrainingWord Word T Acc 1}
+               if Track > 1 then
+                  {TrainingWord Word H|T PassFile Acc 1}
+               else
+                  {TrainingWord Word T H|PassFile Acc 1}
+               end
             end
          end
 
@@ -70,7 +77,7 @@ define
          
          Acc
       [] H|T then
-         NewAcc={TrainingWord Word H Acc 1} 
+         NewAcc={TrainingWord Word H nil Acc 1} 
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -103,7 +110,11 @@ define
       case List of nil then Name
       [] H|T then
           if H.2 > Max then
-              {FindBiggestHelper T H.1 H.2}
+               if {Char.isPunct {Atom.toString H.1}.1} then
+                  {FindBiggestHelper T Name Max}
+               else
+                  {FindBiggestHelper T H.1 H.2}
+               end
           else
               {FindBiggestHelper T Name Max}
           end
@@ -139,7 +150,7 @@ define
       case Input of nil then nil
       [] H|T then 
          if {Char.isCntrl H} then
-            32|46|{Clean T}
+            32|46|32|{Clean T}
          else 
             if {Char.isAlNum H} then
                   if H >= 126 then
@@ -149,7 +160,7 @@ define
                   end
             else
                if {Char.isPunct H} then
-                  32|H|{Clean T}
+                  32|H|32|{Clean T}
                else
                   32|{Clean T}
                end
@@ -168,36 +179,32 @@ define
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}
-         %{Browse CleanText1}
-         if {List.length CleanText1} < Ngram then
-         
-            %{PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
+         CleanText={ClusterMaker CleanText1 0 Ngram}
+         Last={List.last CleanText}
+
+         TempDict=a()
+         WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+
+         {Browse WordRecord}
+
+         %Add the true Pickle loading with concatenation 
+         %create a search inside a tuple
+         BigWord={FindBiggest WordRecord}
+         case BigWord of nil then    
             Result=[[nil] 0]
+            %{PressNgram InputHandle OutputHandle Ngram-1 Result}
          else
-            CleanText={ClusterMaker CleanText1 0 Ngram}
-            Last={List.last CleanText}
-            TempDict=a()
-            WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+            Occu={Value.'.' WordRecord BigWord}
+            TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
 
-            %Add the true Pickle loading with concatenation 
-            %create a search inside a tuple
-            BigWord={FindBiggest WordRecord}
-            case BigWord of nil then    
+            if TPMResult.1 == nil then
                Result=[[nil] 0]
-               %{PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               Occu={Value.'.' WordRecord BigWord}
-               TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
+               Result=TPMResult
+               {OutputHandle set(1:BigWord)}
+            end               
 
-               if TPMResult.1 == nil then
-                  Result=[[nil] 0]
-               else
-                  Result=TPMResult
-                  {OutputHandle set(1:BigWord)}
-               end               
-
-            
-            end
+         
          end
       end
    end
@@ -216,7 +223,7 @@ define
    %%%                  <probability/frequence> := <int> | <float>
    fun {Press} Result in
       {PressNgram InputText OutputText 2 Result}
-      %{Browse Result}
+      {Browse Result}
       Result
    end
    
