@@ -105,7 +105,7 @@ define
    end
 
    proc {DataThread Files Port}
-      thread {Send Port {OpenMultipleFile Files} } end
+      thread {Send Port {SplitMultiple{List.map {OpenMultipleFile Files} Clean}} } end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Port}
@@ -835,7 +835,6 @@ define
       {LaunchThreads SeparatedWordsPort NbThreads}
       {Browse SeparatedWordsStream}
       CombinedData = SeparatedWordsStream
-      {Browse 1}
       {InputText set(1:"")}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
