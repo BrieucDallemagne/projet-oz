@@ -19,6 +19,9 @@ define
    BigFont={QTk.newFont font(family:"Helvetica" size:20 weight:normal slant:roman underline:false overstrike:false)}
 
    SpiceHandle
+   NumFiles
+   SeparatedWordsStream
+   FilesPerThread
    InputText
    OutputText
    InfiniteInput
@@ -97,48 +100,38 @@ define
       Args.'folder'
    end
 
-   %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-   %%% Les threads de parsing envoient leur resultat au port Port
-   % ["path1" "path2" "path3"] avec 2 --> [["path1" "path2"] ["path3"]]
-   fun {SplitList L N} Size in
-      if N == 0 then
-         nil
-      else
-         Size =  {List.length L} div N
-         {List.take L Size} | {SplitList {List.drop L Size} N-1}
+   proc {DataThread Files Ports}
+      thread {Send Ports {SplitMultiple{List.map {OpenMultipleFile Files} Clean}} } end
+   end
+
+   proc {Rec I FilesPerThread NumFiles Files Ports}
+      local
+         StartIndex 
+         EndIndex 
+         ThreadFiles 
+      in
+         if I == 0 then skip 
+         else
+            StartIndex = (I - 1) * FilesPerThread + 1
+            EndIndex = I * FilesPerThread
+            ThreadFiles = {List.take {List.drop Files StartIndex} FilesPerThread} 
+            {DataThread ThreadFiles Ports}
+            {Rec I-1 FilesPerThread NumFiles Files Ports }
+         end
       end
-   end
+   end  
 
-   fun {OpenAndParseFiles Files} 
-      {Map Files fun {$ F} {SplitMultiple {List.map {OpenMultipleFile F} Clean}} end}
-   end
-
-   proc {CreateThreadsAndParseFiles SeparatedWordsPort Files NThreads} 
-
-      {List.forAll {SplitList Files NThreads}
-                     proc {$ FilesChunk}
-                        Thread
-                     in
-                        thread 
-                           {Port.send SeparatedWordsPort {OpenAndParseFiles FilesChunk}}
-                        end
-                     
-                     end}
-      for T in SeparatedWordsPort do {Thread.join T} end
-   end
-
-   proc {LaunchThreads SeparatedWordsPort NbThreads}
-      % Liste des fichiers
+   proc {LaunchThreads Ports NbThreads}
+   
       Files = {OS.getDir {GetSentenceFolder}}
-
-      % Création des threads et traitement des fichiers
-      {CreateThreadsAndParseFiles SeparatedWordsPort Files NbThreads} %ca bloque
-      % Recevoir les résultats des threads
-      for _ in 1..NbThreads do
-         SeparatedWords = {Port.receive SeparatedWordsPort}
-         % Traitement des résultats, par exemple les fusionner
-      end
+   
+      NumFiles = {List.length Files}
+      FilesPerThread = NumFiles div NbThreads
+      {Rec NbThreads FilesPerThread NumFiles Files Ports}
+      {Delay 10000}
+      {Send Ports nil}
    end
+
 
    %%% Ajouter vos fonctions et procédures auxiliaires ici
 
@@ -344,10 +337,10 @@ define
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
-   thread
+   %thread
       %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed = {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
-   end
+   %   Parsed ={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
+   %end
 
    %take a list of string ["hello" "world"] and output "hello world"
    fun {BuildSentence StringList}
@@ -366,6 +359,7 @@ define
          {Browse 'There is no word like this'}
          Result=[[nil] 0]
       else
+         {Browse {List.length Parsed}}
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={Split {Clean InputText}}
@@ -734,6 +728,31 @@ define
       end
    end
 
+   fun {StreamtoList S }
+      case S of nil|T then nil
+      [] H|T then H|{StreamtoList T}
+      else nil
+      end
+   end
+
+   fun {ForList S NbThreads Acc}
+      if NbThreads < 1 then Acc
+      else {ForList S.2 NbThreads-1 {List.append {StreamtoList S.1} Acc} }
+      end
+   end
+
+   SeparatedWordsPort = {NewPort SeparatedWordsStream}
+   NbThreads = 4
+
+   {LaunchThreads SeparatedWordsPort NbThreads}
+
+   Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
+   {Browse {List.length Parsed}}
+
+   {Browse {List.length SeparatedWordsStream.1}}
+   {Browse {List.length SeparatedWordsStream.2.1}}
+   {Browse {List.length SeparatedWordsStream.2.2.1}}
+   {Browse {List.length SeparatedWordsStream.2.2.2.1}}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -842,12 +861,6 @@ define
    
       %{InputText tk(insert 'end' " Loading... Please wait.")}
       %{InputText bind(event:"<Control-s>" action:Press)}  %You can also bind events
-   
-      % On lance les threads de lecture et de parsing
-      SeparatedWordsPort = {NewPort SeparatedWordsStream}
-      NbThreads = 4
-      % Décommentez moi quand la fonction de Thread fonctionne
-      %{LaunchThreads SeparatedWordsPort NbThreads}
    
       {InputText set(1:"")}
 
