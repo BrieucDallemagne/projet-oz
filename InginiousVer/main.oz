@@ -25,25 +25,45 @@ define
       local
          StartIndex 
          EndIndex 
-         ThreadFiles 
+         ThreadFiles
+         TakeLol 
       in
          if I == 0 then skip 
          else
-            StartIndex = (I - 1) * FilesPerThread + 1
-            EndIndex = I * FilesPerThread
-            ThreadFiles = {List.take {List.drop Files StartIndex} FilesPerThread} 
+            if FilesPerThread.2 == nil then
+               TakeLol=FilesPerThread.1
+            else
+               TakeLol=FilesPerThread.2.1-FilesPerThread.1
+            end
+            StartIndex = (I - 1) * FilesPerThread.1
+            EndIndex = I * FilesPerThread.1
+            ThreadFiles = {List.take {List.drop Files FilesPerThread.1} TakeLol} 
             {DataThread ThreadFiles Ports}
-            {Rec I-1 FilesPerThread NumFiles Files Ports }
+            {Rec I-1 FilesPerThread.2 NumFiles Files Ports }
          end
       end
    end  
+
+   fun {LoadBalancer NumFiles NbThreads Remaining}
+      if Remaining < 2*(NumFiles div NbThreads) then
+         Remaining|nil
+      else
+         (NumFiles div NbThreads)|{LoadBalancer NumFiles NbThreads Remaining-(NumFiles div NbThreads)}
+      end
+   end
+
+   fun {FakeFold List Acc}
+      case List of nil then nil
+      [] H|T then H+Acc|{FakeFold T H+Acc}
+      end
+  end
 
    proc {LaunchThreads Ports NbThreads}
    
       Files = {OS.getDir {GetSentenceFolder}}
    
       NumFiles = {List.length Files}
-      FilesPerThread = NumFiles div NbThreads
+      FilesPerThread = {FakeFold {LoadBalancer NumFiles NbThreads NumFiles} ~{LoadBalancer NumFiles NbThreads NumFiles}.1}
       {Rec NbThreads FilesPerThread NumFiles Files Ports}
    end
 
@@ -279,7 +299,7 @@ define
    end
 
    SeparatedWordsPort = {NewPort SeparatedWordsStream}
-   NbThreads = 4
+   NbThreads = 8
 
    {LaunchThreads SeparatedWordsPort NbThreads}
 
@@ -324,10 +344,6 @@ define
 	 {InputText tk(insert 'end' "Loading... Please wait.")}
 	 {InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
 	 
-            % On lance les threads de lecture et de parsing
-	 SeparatedWordsPort = {NewPort SeparatedWordsStream}
-	 NbThreads = 4
-	 {LaunchThreads SeparatedWordsPort NbThreads}
 	 
 	 {InputText set(1:"")}
       end
