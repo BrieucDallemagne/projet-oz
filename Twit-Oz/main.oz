@@ -52,17 +52,6 @@ define
       {Browser.browse Buf}
    end
 
-   %%% /!\ Fonction testee /!\
-   %%% @pre : les threads sont "ready"
-   %%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
-   %%%        Affiche la prediction la plus probable du prochain mot selon les deux derniers mots entres
-   %%% @return: Retourne une liste contenant la liste du/des mot(s) le(s) plus probable(s) accompagnee de 
-   %%%          la probabilite/frequence la plus elevee. 
-   %%%          La valeur de retour doit prendre la forme:
-   %%%                  <return_val> := <most_probable_words> '|' <probability/frequence> '|' nil
-   %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
-   %%%                                           | nil
-   %%%                  <probability/frequence> := <int> | <float>
    fun {GetN} NHandle in
       {NgramHandle get(1:NHandle)}
       if {String.isInt NHandle} then
@@ -133,7 +122,6 @@ define
    proc {NewWin Message Inside Handle Return}
       {{QTk.build Inside} show}
       {Handle set(Message)}
-      %{Wait Return}  Return will be bound when the window is closed
    end
 
    %Takes a String and remove all non Ascii Character
@@ -306,8 +294,6 @@ define
          catch X then
             skip
          end
-         
-         %{Browse 'Finished'}
          Acc
       [] H|T then
          NewAcc={TrainingWord Word H Acc 1} 
@@ -331,11 +317,6 @@ define
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
-   %thread
-      %Permet de lire tous les fichiers et fait des listes de mots
-   %   Parsed ={SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} %Contains the parsed documents
-   %end
-
    %take a list of string ["hello" "world"] and output "hello world"
    fun {BuildSentence StringList}
       case StringList of nil then nil
@@ -353,27 +334,20 @@ define
          {Browse 'There is no word like this'}
          Result=[[nil] 0]
       else
-         {Browse {List.length Parsed}}
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={Split {Clean InputText}}
          if {List.length CleanText1} < Ngram then
-            %{Browse 'None'}
          
             {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
 
-            %{Browse 'Trying with '#Ngram#' word and for '#{List.map Last String.toAtom}}
-            %Check if the Pickle is already existing
-            %{Browse {List.map {OS.getDir "Pickle/Word"} String.toAtom}}
-            %{Browse {String.toAtom {VirtualString.toString {Mashing Last}#".ozp"}}}
             try %To Handle missing directory and inginious issue
                _={List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}}
                Dir=true
             catch X then
-               %{Browse '** '#X#' **'}
                {Browse 'No directory found'}
                Dir=false
             end
@@ -382,9 +356,7 @@ define
                if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
                   %{Browse 'Exist'}
                   WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
-                  %{Browse WordRecord}
                else
-                  %{Browse 'Working'}
                   TempDict=a()
                   WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
                end
@@ -393,16 +365,13 @@ define
                   WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
             end
 
-            %{Browse WordRecord}
             %Add the true Pickle loading with concatenation 
             %create a search inside a tuple
             BigWord={FindBiggest WordRecord}
             case BigWord of nil then    
-               %{Browse {FindBiggest WordRecord}}
 
                {PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               %{Browse {FindBiggest WordRecord}}
                {SpiceHandle get(1:SpiceTest)}
 
                if SpiceTest then
@@ -411,7 +380,6 @@ define
                   PlaceHolder=BigWord
                end
                Result=[{Record.arity WordRecord} {List.foldL {Record.toList WordRecord} fun{$ X Y} X+Y end 0}]
-               %{Browse Result}
                {TestImage WordRecord.PlaceHolder Result.2.1}
 
                {OutputHandle set(1:{BuildSentence CleanText1}#" "#PlaceHolder)}
@@ -425,8 +393,6 @@ define
    fun {OnlyAlpha List}
       case List of nil then nil
       [] H|T then 
-         %{Browse {Atom.toString H}}
-         %{Browse {List.filter {Atom.toString H} Char.isAlpha}} %h
          {List.filter {Atom.toString H} Char.isAlpha}|{OnlyAlpha T}
       end
    end
@@ -479,9 +445,6 @@ define
       
       %Remove Issue with Keys
       {List.forAll Clean proc{$ Word} {TrainingOneWordFiles {Atom.toString Word} Splited {Dictionary.new}} end}
-
-      %Splited={SplitMultiple Files}
-      %{List.forAll {List.drop {Dictionary.keys Clean} 1} proc{$ Word} {Browse Word} {TrainingOneWordFiles Word Splited {Dictionary.new}} end}
    end
       
    %To get the current OS
@@ -512,7 +475,6 @@ define
          Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
       end
 
-      %{Browse 'Updating'}
       {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
 
       {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
@@ -578,7 +540,6 @@ define
          Result={Press}
          {OutputText get(1:Res)}
          {InputText set(1:Res)}
-         %{Browse Num}
          {Infinity Num-1}
       end
    end
@@ -589,8 +550,6 @@ define
       CleanInput={List.filter UserInput Char.isDigit}
       case CleanInput of nil then {Browse 'Please provide a correct number'} {Running set(1:false)}
       else
-          %{Browse {String.toInt CleanInput}}
-          %{Browse 'We are good'}
           {Infinity {String.toInt CleanInput}}
           {Running set(1:false)}
       end
@@ -607,10 +566,8 @@ define
 
    proc {Save} F Input Ecrit in %To Save input 
       {OutputText get(1:Input)}
-      %{Browse Input}
       F={New Open.file init(name:"User/"#{Mashing {Split Input}}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
-      %{F write(vs:Input len:{List.length Input})}
-      %{F write(vs:"Test" len:4)}
+
       {F write(vs:Input len:{List.length Input})}
       {F close()}
    end
@@ -628,8 +585,6 @@ define
    end
    
    fun {FindClosest Input ListWord Start Track Diff} Close in
-      %{Browse Input}
-      %{Browse ListWord}
       if Start > {List.length ListWord} then
             Track
       else
@@ -660,7 +615,6 @@ define
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
       CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
-      %{Browse CorrectWord}
       {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
       {OutputText set(1:{List.tokens {Mashing Result} & })}
@@ -669,7 +623,6 @@ define
    proc {OpenDialog} Path F Content in
       thread
          Path={QTk.dialogbox load(initialdir:"./User" title:"Load" filetypes:q(q( "Texte" q(".txt"))) defaultextension:"txt" $)}
-         %{Browse {String.toAtom Path}}
       end
       if Path==nil then
          skip
@@ -687,7 +640,6 @@ define
       NewFont={QTk.newFont font(family:"Helvetica" size:10 weight:normal slant:roman underline:false overstrike:false)}
       Ratio={Int.toFloat Occ} / {Int.toFloat All} %Number/All
       InFill=c({Float.toInt (1.0-Ratio)*255.0} {Float.toInt Ratio*255.0} 0)
-      %{Browse Ratio}
 
       {C create(arc 10 10 190 190 fill:BGColor outline:DarkerBGC start:220 extent:~260 width:11 style:arc)} %to clean
       {C create(rectangle 50 50 150 150 fill:BGColor outline:BGColor)}
@@ -697,7 +649,6 @@ define
    end
 
    proc {Loader Phase Rot} State in
-      %{Browse Rot}
       {Running get(1:State)}
       {D create(arc 12 12 88 88 fill:BGColor outline:DarkerBGC start:(Phase-2)*Rot-2 extent:Rot+2 width:16 style:arc)}
       if State then
@@ -743,6 +694,7 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
+   {Browse Parsed}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -771,13 +723,6 @@ define
 
 
    in
-      %% Fonction d'exemple qui liste tous les fichiers
-      %% contenus dans le dossier passe en Argument.
-      %% Inspirez vous en pour lire le contenu des fichiers
-      %% se trouvant dans le dossier
-      %%% N'appelez PAS cette fonction lors de la phase de
-      %%% soumission !!!
-      % {ListAllFiles {OS.getDir TweetsFolder}}
 
       local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort ReadFiles FeedbackUpdate Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
@@ -849,8 +794,7 @@ define
       Window={QTk.build Description}
       {Window show}
    
-      %{InputText tk(insert 'end' " Loading... Please wait.")}
-      %{InputText bind(event:"<Control-s>" action:Press)}  %You can also bind events
+      {InputText tk(insert 'end' " Loading... Please wait.")}
    
       {InputText set(1:"")}
 
