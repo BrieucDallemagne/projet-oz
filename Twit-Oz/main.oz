@@ -82,7 +82,7 @@ define
    end
    
    fun {SplitMultiple ListInput}
-         case ListInput of nil then nil
+         case ListInput of nil then fin|nil
          [] H|T then {Split H}|{SplitMultiple T}
          end
    end
@@ -101,7 +101,7 @@ define
    end
 
    proc {DataThread Files Ports}
-      thread {Send Ports {SplitMultiple{List.map {OpenMultipleFile Files} Clean}} } end
+      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }   }end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Ports}
@@ -728,7 +728,9 @@ define
 
    fun {StreamtoList S }
       case S of nil|T then nil
-      [] H|T then H|{StreamtoList T}
+      [] H|T then if H == fin then {Browse 'fin du stream'} nil
+                  else H|{StreamtoList T}
+                  end
       else nil
       end
    end
@@ -743,8 +745,6 @@ define
    NbThreads = 4
 
    {LaunchThreads SeparatedWordsPort NbThreads}
-   {Delay 10000}
-   {Send SeparatedWordsPort nil}
 
    Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
 
