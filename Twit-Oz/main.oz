@@ -128,8 +128,6 @@ define
       NumFiles = {List.length Files}
       FilesPerThread = NumFiles div NbThreads
       {Rec NbThreads FilesPerThread NumFiles Files Ports}
-      {Delay 10000}
-      {Send Ports nil}
    end
 
 
@@ -745,14 +743,10 @@ define
    NbThreads = 4
 
    {LaunchThreads SeparatedWordsPort NbThreads}
+   {Delay 10000}
+   {Send SeparatedWordsPort nil}
 
    Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
-   {Browse {List.length Parsed}}
-
-   {Browse {List.length SeparatedWordsStream.1}}
-   {Browse {List.length SeparatedWordsStream.2.1}}
-   {Browse {List.length SeparatedWordsStream.2.2.1}}
-   {Browse {List.length SeparatedWordsStream.2.2.2.1}}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
