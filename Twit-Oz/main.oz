@@ -31,11 +31,7 @@ define
    DataBase
    N % le N de N-gramme
    NgramHandle % son Handle
-   SeparatedWords
    Files
-   NewThread
-   TakeDrop
-   Threads
    Akinator={QTk.newImage photo(file:"./Pic/akinator_1_defi.png" format:"png" height:100 width:100)}
    C
    D
@@ -728,7 +724,7 @@ define
 
    fun {StreamtoList S }
       case S of nil|T then nil
-      [] H|T then if H == fin then {Browse 'fin du stream'} nil
+      [] H|T then if H == fin then nil
                   else H|{StreamtoList T}
                   end
       else nil
@@ -783,7 +779,7 @@ define
       %%% soumission !!!
       % {ListAllFiles {OS.getDir TweetsFolder}}
 
-      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort Saving GetText ReadFiles TestRes CountTest FeedbackUpdate Another Newcommers in
+      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort ReadFiles FeedbackUpdate Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers
