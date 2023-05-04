@@ -15,7 +15,6 @@ define
    thread
       %Permet de lire tous les fichiers et fait des listes de mots
       Parsed={List.map {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O} nil|nil|O end}%Contains the parsed documents
-      {Browse Parsed}
    end
 
 
@@ -51,7 +50,6 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {Browse {List.take PassFile 1}.1|H|T}
             {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
             if H=={List.nth Word Track} then
@@ -185,7 +183,6 @@ define
          TempDict=a()
          WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
 
-         {Browse WordRecord}
 
          %Add the true Pickle loading with concatenation 
          %create a search inside a tuple

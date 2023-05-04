@@ -86,6 +86,7 @@ define
 
    fun {Press} Result in
       {PressNgram InputText OutputText {GetN} Result}
+      {Browse Result}
       Result
    end
 
