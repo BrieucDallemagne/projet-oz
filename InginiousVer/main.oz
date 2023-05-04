@@ -9,16 +9,43 @@ import
    Browser
 define
    Parsed
+   SeparatedWordsStream
+   NumFiles
+   Files
+   FilesPerThread
    InputText 
    OutputText
 
-   thread
-      %Permet de lire tous les fichiers et fait des listes de mots
-      Parsed={List.map {SplitMultiple{List.map {OpenMultipleFile {OS.getDir {GetSentenceFolder}}} Clean}} fun{$ O} nil|nil|O end}%Contains the parsed documents
-      {Browse Parsed}
+
+   proc {DataThread Files Ports}
+      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }   }end
    end
 
+   proc {Rec I FilesPerThread NumFiles Files Ports}
+      local
+         StartIndex 
+         EndIndex 
+         ThreadFiles 
+      in
+         if I == 0 then skip 
+         else
+            StartIndex = (I - 1) * FilesPerThread + 1
+            EndIndex = I * FilesPerThread
+            ThreadFiles = {List.take {List.drop Files StartIndex} FilesPerThread} 
+            {DataThread ThreadFiles Ports}
+            {Rec I-1 FilesPerThread NumFiles Files Ports }
+         end
+      end
+   end  
 
+   proc {LaunchThreads Ports NbThreads}
+   
+      Files = {OS.getDir {GetSentenceFolder}}
+   
+      NumFiles = {List.length Files}
+      FilesPerThread = NumFiles div NbThreads
+      {Rec NbThreads FilesPerThread NumFiles Files Ports}
+   end
 
    %%% Pour ouvrir les fichiers
    class TextFile
@@ -51,7 +78,6 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {Browse {List.take PassFile 1}.1|H|T}
             {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
          else
             if H=={List.nth Word Track} then
@@ -185,7 +211,6 @@ define
          TempDict=a()
          WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
 
-         {Browse WordRecord}
 
          %Add the true Pickle loading with concatenation 
          %create a search inside a tuple
@@ -227,13 +252,6 @@ define
       Result
    end
    
-    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-    %%% Les threads de parsing envoient leur resultat au port Port
-   proc {LaunchThreads Port N}
-        % TODO
-      skip
-   end
-   
    %%% Ajouter vos fonctions et procédures auxiliaires ici
 
 
@@ -244,6 +262,28 @@ define
    in
       Args.'folder'
    end
+
+   fun {StreamtoList S }
+      case S of nil|T then nil
+      [] H|T then if H == fin then {Browse 'fin du stream'} nil
+                  else H|{StreamtoList T}
+                  end
+      else nil
+      end
+   end
+
+   fun {ForList S NbThreads Acc}
+      if NbThreads < 1 then Acc
+      else {ForList S.2 NbThreads-1 {List.append {StreamtoList S.1} Acc} }
+      end
+   end
+
+   SeparatedWordsPort = {NewPort SeparatedWordsStream}
+   NbThreads = 4
+
+   {LaunchThreads SeparatedWordsPort NbThreads}
+
+   Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
 
    %%% Decomnentez moi si besoin
    %proc {ListAllFiles L}
