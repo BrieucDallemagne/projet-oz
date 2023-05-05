@@ -62,13 +62,18 @@ define
       end
    end
 
-   %Takes a String, clean and put each word in a list
-   fun {Split Input}
-         {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
+   fun {SplitHelper Input}
+      case Input of nil then nil
+      [] H|T then {List.filter {String.tokens H & } fun {$ O} O \= nil end}|{SplitHelper T}
+      end
    end
    
+   fun {Split Input}
+      {SplitHelper {String.tokens {Clean Input} &.}}
+   end
+
    fun {SplitMultiple ListInput}
-         case ListInput of nil then fin|nil
+         case ListInput of nil then nil
          [] H|T then {Split H}|{SplitMultiple T}
          end
    end
@@ -87,7 +92,7 @@ define
    end
 
    proc {DataThread Files Ports}
-      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }   }end
+      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }}end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Ports}
@@ -150,17 +155,17 @@ define
       case Input of nil then nil
       [] H|T then 
          if {Char.isCntrl H} then
-            32|{Clean T}
+            32|46|32|{Clean T}
          else 
             if {Char.isAlNum H} then
                   if H >= 126 then
                      32|{Clean T}
                   else
-                     H|{Clean T}
+                     {Char.toLower H}|{Clean T}
                   end
             else
                if {Char.isPunct H} then
-                  32|H|{Clean T} %So punctuation is like a word
+                  32|46|32|{Clean T}
                else
                   32|{Clean T}
                end
@@ -247,7 +252,7 @@ define
    %Use {ClusterMaker}
    fun {SubCluster Input Start Num} Res in
       if {List.length Input} < Num then
-         {SubCluster {List.append {ByteString.make 'EMPTYSTRING'}|nil Input} Start Num}
+         {SubCluster nil|Input Start Num}
       else
          if {List.length Input}<Start+Num then
             nil
@@ -280,7 +285,7 @@ define
       end
    end
 
-      %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
+   %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
    fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
       %{Browse File}
@@ -289,7 +294,6 @@ define
          Acc
       [] H|T then
          if Track>{List.length Word} then
-            {Browse 'Found'}
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
             {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
@@ -346,7 +350,11 @@ define
       case List of nil then Name
       [] H|T then
           if H.2 > Max then
-              {FindBiggestHelper T H.1 H.2}
+               if {Char.isPunct {Atom.toString H.1}.1} then
+                  {FindBiggestHelper T Name Max}
+               else
+                  {FindBiggestHelper T H.1 H.2}
+               end
           else
               {FindBiggestHelper T Name Max}
           end
@@ -354,7 +362,7 @@ define
   end
   
    %Take a Record and return the biggest key for its value
-   fun {FindBiggest Input} Temp in
+   fun {FindBiggest Input}
       {FindBiggestHelper {Record.toListInd Input} nil 0}
    end
 
@@ -377,13 +385,14 @@ define
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={Split {Clean InputText}}
-         if {List.length CleanText1} < Ngram then
+         CleanText1={List.last {List.filter {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end} fun{$ O} O \= nil end}}
+         if {List.length CleanText1} == 0 then
          
-            {PressNgram InputHandle OutputHandle {List.length CleanText1} Result}
+            Result=[[nil] 0]
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
+
 
             try %To Handle missing directory and inginious issue
                _={List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}}
@@ -716,7 +725,7 @@ define
 
    fun {StreamtoList S }
       case S of nil|T then nil
-      [] H|T then if H == fin then nil
+      [] H|T then if H == fin then {Browse 'fin du stream'} nil
                   else H|{StreamtoList T}
                   end
       else nil
@@ -728,7 +737,6 @@ define
       else {ForList S.2 NbThreads-1 {List.append {StreamtoList S.1} Acc} }
       end
    end
-
 
    SeparatedWordsPort = {NewPort SeparatedWordsStream}
    WantedNbThreads=8
@@ -742,7 +750,7 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads nil}
-   %{Browse Parsed}
+   {Browse {List.length Parsed}}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}

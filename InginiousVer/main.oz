@@ -97,7 +97,6 @@ define
          Acc
       [] H|T then
          if Track>{List.length Word} then
-            {Browse 'Found'}
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
             {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
@@ -260,7 +259,7 @@ define
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
 
-
+            {Browse 'Last'}
             {Browse Last}
             TempDict=a()
             WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
@@ -344,7 +343,6 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads nil}
-   {Browse Parsed}
    %{Browse {List.length Parsed}}
 
    %%% Decomnentez moi si besoin
