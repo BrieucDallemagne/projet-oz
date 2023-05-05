@@ -26,6 +26,7 @@ define
    OutputText
    InfiniteInput
    Parsed
+   NbThreads
    ListFile
    NumberWord
    DataBase
@@ -93,25 +94,45 @@ define
       local
          StartIndex 
          EndIndex 
-         ThreadFiles 
+         ThreadFiles
+         TakeLol 
       in
          if I == 0 then skip 
          else
-            StartIndex = (I - 1) * FilesPerThread + 1
-            EndIndex = I * FilesPerThread
-            ThreadFiles = {List.take {List.drop Files StartIndex} FilesPerThread} 
+            if FilesPerThread.2 == nil then
+               TakeLol=FilesPerThread.1
+            else
+               TakeLol=FilesPerThread.2.1-FilesPerThread.1
+            end
+            StartIndex = (I - 1) * FilesPerThread.1
+            EndIndex = I * FilesPerThread.1
+            ThreadFiles = {List.take {List.drop Files FilesPerThread.1} TakeLol} 
             {DataThread ThreadFiles Ports}
-            {Rec I-1 FilesPerThread NumFiles Files Ports }
+            {Rec I-1 FilesPerThread.2 NumFiles Files Ports }
          end
       end
    end  
+
+   fun {LoadBalancer NumFiles NbThreads Remaining}
+      if Remaining < 2*(NumFiles div NbThreads) then
+         Remaining|nil
+      else
+         (NumFiles div NbThreads)|{LoadBalancer NumFiles NbThreads Remaining-(NumFiles div NbThreads)}
+      end
+   end
+
+   fun {FakeFold List Acc}
+      case List of nil then nil
+      [] H|T then H+Acc|{FakeFold T H+Acc}
+      end
+   end
 
    proc {LaunchThreads Ports NbThreads}
    
       Files = {OS.getDir {GetSentenceFolder}}
    
       NumFiles = {List.length Files}
-      FilesPerThread = NumFiles div NbThreads
+      FilesPerThread = {FakeFold {LoadBalancer NumFiles NbThreads NumFiles} ~{LoadBalancer NumFiles NbThreads NumFiles}.1}
       {Rec NbThreads FilesPerThread NumFiles Files Ports}
    end
 
@@ -251,29 +272,6 @@ define
       end
    end
 
-   %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
-   %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   fun {TrainingWord Word File Acc Track} Size Retrieve Inc Name in
-
-
-      case File of nil then 
-         Acc
-      [] H|T then
-         if Track>{List.length Word} then
-            Name={String.toAtom H}
-            Retrieve={Value.condSelect Acc Name 0}+1
-            {TrainingWord Word T {Record.adjoin Acc a(Name : Retrieve)} 1}
-         else
-            if H=={List.nth Word Track} then
-                  {TrainingWord Word T Acc Track+1}
-            else
-                  {TrainingWord Word T Acc 1}
-            end
-         end
-
-      end
-   end
-
    %Take a List and "mash" them together
    %ex: [a b c d] --> a_b_c_d
    fun {Mashing Input}
@@ -282,21 +280,64 @@ define
       end
    end
 
+      %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
+   %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
+   fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
+      %{Browse File}
+
+      case File of nil then 
+         Acc
+      [] H|T then
+         if Track>{List.length Word} then
+            {Browse 'Found'}
+            Name={String.toAtom H}
+            Retrieve={Value.condSelect Acc Name 0}+1
+            {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+         else
+            if H=={List.nth Word Track} then
+                  {TrainingWord Word T H|PassFile Acc Track+1}
+            else
+               if Track > 1 then
+                  {TrainingWord Word H|T PassFile Acc 1}
+               else
+                  {TrainingWord Word T H|PassFile Acc 1}
+               end
+            end
+         end
+
+      end
+   end
+
+   fun {NilatorHelp ListSimplePointSplit Ngram}
+      if Ngram =< 1 then
+         ListSimplePointSplit
+      else
+         {NilatorHelp nil|ListSimplePointSplit Ngram-1}
+      end
+   end
+   
+   fun {Nilator ListPointSplit Ngram}
+      case ListPointSplit of nil then nil
+      [] H|T then {NilatorHelp H Ngram}|{Nilator T Ngram}
+      end
+   end
+
+   fun {TrainingWordHelper Word BigFiles Acc}
+      case BigFiles of nil then Acc
+      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil Acc 1}}
+      end
+   end
+
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   fun {TrainingWordFiles Word Files Acc N} Size NewAcc ByteFiles Mashed in
-      Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
+   fun {TrainingWordFiles Word Files Acc N} NewAcc in
+      %Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         try
-            Mashed={VirtualString.toString {Mashing Word}}
-            {Pickle.saveWithHeader Acc "Pickle/Word/"#Mashed#".ozp" "Pour "#Mashed 0} %It uses a false compression take 4kb on disk for 24bit
-         catch X then
-            skip
-         end
+         {Browse Acc}
          Acc
       [] H|T then
-         NewAcc={TrainingWord Word H Acc 1} 
+         NewAcc={TrainingWordHelper Word H Acc} 
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -688,12 +729,20 @@ define
       end
    end
 
+
    SeparatedWordsPort = {NewPort SeparatedWordsStream}
-   NbThreads = 4
+   WantedNbThreads=8
+
+   if {List.length {OS.getDir {GetSentenceFolder}}} < WantedNbThreads then
+      NbThreads={List.length {OS.getDir {GetSentenceFolder}}}
+   else
+      NbThreads=WantedNbThreads
+   end
 
    {LaunchThreads SeparatedWordsPort NbThreads}
 
-   Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
+   Parsed = {ForList SeparatedWordsStream NbThreads nil}
+   %{Browse Parsed}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
