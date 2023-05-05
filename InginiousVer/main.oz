@@ -15,6 +15,7 @@ define
    FilesPerThread
    InputText 
    OutputText
+   NbThreads
 
 
    proc {DataThread Files Ports}
@@ -251,35 +252,37 @@ define
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={List.last {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}}
-         CleanText={ClusterMaker CleanText1 0 Ngram}
-         {Browse CleanText}
-         {Browse CleanText1}
-         Last={List.last CleanText}
-
-         TempDict=a()
-         WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
-         {Browse WordRecord}
-
-
-         %Add the true Pickle loading with concatenation 
-         %create a search inside a tuple
-         BigWord={FindBiggest WordRecord}
-         case BigWord of nil then    
+         CleanText1={List.last {List.filter {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end} fun{$ O} O \= nil end}}
+         if {List.length CleanText1} == 0 then
             Result=[[nil] 0]
-            %{PressNgram InputHandle OutputHandle Ngram-1 Result}
-         else
-            Occu={Value.'.' WordRecord BigWord}
-            TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
+         else 
+            CleanText={ClusterMaker CleanText1 0 Ngram}
+            {Browse CleanText}
+            {Browse CleanText1}
+            Last={List.last CleanText}
 
-            if TPMResult.1 == nil then
+            TempDict=a()
+            WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+            {Browse WordRecord}
+
+
+            %Add the true Pickle loading with concatenation 
+            %create a search inside a tuple
+            BigWord={FindBiggest WordRecord}
+            case BigWord of nil then    
                Result=[[nil] 0]
+               %{PressNgram InputHandle OutputHandle Ngram-1 Result}
             else
-               Result=TPMResult
-               {OutputHandle set(1:BigWord)}
-            end               
+               Occu={Value.'.' WordRecord BigWord}
+               TPMResult=[{List.filter {List.filter {Record.arity WordRecord} fun{$ C} {Char.isPunct {Atom.toString C}.1}==false end} fun{$ O} {Value.'.' WordRecord O}==Occu end} Occu]
 
-         
+               if TPMResult.1 == nil then
+                  Result=[[nil] 0]
+               else
+                  Result=TPMResult
+                  {OutputHandle set(1:BigWord)}
+               end               
+            end
          end
       end
    end
@@ -329,7 +332,13 @@ define
    end
 
    SeparatedWordsPort = {NewPort SeparatedWordsStream}
-   NbThreads = 8
+   WantedNbThreads=8
+
+   if {List.length {OS.getDir {GetSentenceFolder}}} < WantedNbThreads then
+      NbThreads={List.length {OS.getDir {GetSentenceFolder}}}
+   else
+      NbThreads=WantedNbThreads
+   end
 
    {LaunchThreads SeparatedWordsPort NbThreads}
 

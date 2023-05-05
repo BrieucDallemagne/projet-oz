@@ -1,0 +1,3 @@
+To improve:
+* Too many recursion causing long launching time
+* Accelerate load balancer and more reliable work balancer function

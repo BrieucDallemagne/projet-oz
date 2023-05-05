@@ -90,10 +90,4 @@ fun {TrainingWordHelper Word BigFiles Acc}
 end
 
 
-{Browse 'Starting'}
-{Browse {Split "hello, how are you"}}
-
-{Browse {TrainingWordHelper [nil "hello"] {Split "hello, how are you"} a()}}
-
-{Browse 'Nilator'}
-{Browse {NilatorHelp "hello it is" 2}}
+{Browse {Split {Clean "line \n"}}}
