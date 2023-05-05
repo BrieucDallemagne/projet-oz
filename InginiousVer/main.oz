@@ -116,7 +116,7 @@ define
 
    fun {TrainingWordHelper Word BigFiles Acc}
       case BigFiles of nil then Acc
-      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil a() 1}}
+      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil Acc 1}}
       end
    end
 
@@ -126,10 +126,10 @@ define
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         
+         {Browse Acc}
          Acc
       [] H|T then
-         NewAcc={TrainingWord Word H nil Acc 1} 
+         NewAcc={TrainingWordHelper Word H Acc} 
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -259,6 +259,7 @@ define
 
          TempDict=a()
          WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+         {Browse WordRecord}
 
 
          %Add the true Pickle loading with concatenation 
