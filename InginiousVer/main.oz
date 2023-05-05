@@ -18,7 +18,7 @@ define
 
 
    proc {DataThread Files Ports}
-      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }   }end
+      thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }}end
    end
 
    proc {Rec I FilesPerThread NumFiles Files Ports}
@@ -114,6 +114,12 @@ define
       end
    end
 
+   fun {TrainingWordHelper Word BigFiles Acc}
+      case BigFiles of nil then Acc
+      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil a() 1}}
+      end
+   end
+
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
    fun {TrainingWordFiles Word Files Acc N} NewAcc in
       %Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
@@ -142,8 +148,29 @@ define
       end
    end
 
+
+   fun {NilatorHelp ListSimplePointSplit Ngram}
+      if Ngram =< 1 then
+         ListSimplePointSplit
+      else
+         {NilatorHelp nil|ListSimplePointSplit Ngram-1}
+      end
+   end
+   
+   fun {Nilator ListPointSplit Ngram}
+      case ListPointSplit of nil then nil
+      [] H|T then {NilatorHelp H Ngram}|{Nilator T Ngram}
+      end
+   end
+   
+   fun {SplitHelper Input}
+      case Input of nil then nil
+      [] H|T then {List.filter {String.tokens H & } fun {$ O} O \= nil end}|{SplitHelper T}
+      end
+   end
+   
    fun {Split Input}
-      {List.filter {String.tokens {Clean Input} & } fun {$ O} O \= nil end}
+      {SplitHelper {String.tokens {Clean Input} &.}}
    end
 
    fun {SplitMultiple ListInput}
@@ -206,7 +233,7 @@ define
                   end
             else
                if {Char.isPunct H} then
-                  32|H|32|{Clean T}
+                  32|46|32|{Clean T}
                else
                   32|{Clean T}
                end
@@ -224,8 +251,10 @@ define
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}
+         CleanText1={List.last {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end}}
          CleanText={ClusterMaker CleanText1 0 Ngram}
+         {Browse CleanText}
+         {Browse CleanText1}
          Last={List.last CleanText}
 
          TempDict=a()
@@ -303,7 +332,8 @@ define
 
    {LaunchThreads SeparatedWordsPort NbThreads}
 
-   Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
+   Parsed = {ForList SeparatedWordsStream NbThreads nil}
+   %{Browse {List.length Parsed}}
 
    %%% Decomnentez moi si besoin
    %proc {ListAllFiles L}

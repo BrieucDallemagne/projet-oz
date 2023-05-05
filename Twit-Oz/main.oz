@@ -694,7 +694,6 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads [nil]}
-   {Browse Parsed}
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
