@@ -99,7 +99,11 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            if Track == 2 then
+               {TrainingWord Word H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            else
+               {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            end
          else
             if H=={List.nth Word Track} then
                   {TrainingWord Word T H|PassFile Acc Track+1}
@@ -117,7 +121,7 @@ define
 
    fun {TrainingWordHelper Word BigFiles Acc}
       case BigFiles of nil then Acc
-      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil Acc 1}}
+      [] H|T then  {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil Acc 1}}
       end
    end
 
@@ -127,7 +131,6 @@ define
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Browse Acc}
          Acc
       [] H|T then
          NewAcc={TrainingWordHelper Word H Acc} 
@@ -259,11 +262,8 @@ define
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
 
-            {Browse 'Last'}
-            {Browse Last}
             TempDict=a()
             WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
-            {Browse WordRecord}
 
 
             %Add the true Pickle loading with concatenation 
@@ -300,7 +300,7 @@ define
    %%%                                           | nil
    %%%                  <probability/frequence> := <int> | <float>
    fun {Press} Result in
-      {PressNgram InputText OutputText 2 Result}
+      {PressNgram InputText OutputText 1 Result} %mettre 2 au lieu de 1
       {Browse Result}
       Result
    end
