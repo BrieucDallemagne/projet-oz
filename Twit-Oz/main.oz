@@ -307,7 +307,6 @@ define
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
    fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
-      %{Browse File}
 
       case File of nil then 
          Acc
@@ -424,7 +423,6 @@ define
  
             if Dir then
                if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
-                  %{Browse 'Exist'}
                   WordRecord={Pickle.load "Pickle/Word/"#{VirtualString.toAtom {ByteString.toString {Mashing Last}}#".ozp"}}
                else
                   TempDict=a()
@@ -805,7 +803,6 @@ define
       local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort ReadFiles FeedbackUpdate Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-      {Browse NgramYes}
       %Lis les fichiers
       ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
 
