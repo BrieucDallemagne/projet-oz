@@ -79,6 +79,7 @@ define
    end
 
    fun {Press} Result in
+      {System.gcDo}
       {PressNgram InputText OutputText {GetN} Result}
       Result
    end
@@ -314,7 +315,11 @@ define
          if Track>{List.length Word} then
             Name={String.toAtom H}
             Retrieve={Value.condSelect Acc Name 0}+1
-            {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            if Track == 2 then
+               {TrainingWord Word H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            else
+               {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+            end
          else
             if H=={List.nth Word Track} then
                   {TrainingWord Word T H|PassFile Acc Track+1}
@@ -356,7 +361,6 @@ define
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         %{Browse Acc}
          Acc
       [] H|T then
          NewAcc={TrainingWordHelper Word H Acc {GetN}} 
@@ -398,19 +402,17 @@ define
    
    proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
       if Ngram =< 0 then
-         {Browse 'There is no word like this'}
+         {OutputHandle set(1:'There is no word like this')}
          Result=[[nil] 0]
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
          CleanText1={List.last {List.filter {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end} fun{$ O} O \= nil end}}
          if {List.length CleanText1} == 0 then
-         
             Result=[[nil] 0]
          else
             CleanText={ClusterMaker CleanText1 0 Ngram}
             Last={List.last CleanText}
-
 
             try %To Handle missing directory and inginious issue
                _={List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}}
@@ -419,7 +421,7 @@ define
                {Browse 'No directory found'}
                Dir=false
             end
-
+ 
             if Dir then
                if {List.member {VirtualString.toString {Mashing Last}#".ozp"} {OS.getDir "Pickle/Word"}} then
                   %{Browse 'Exist'}
@@ -430,7 +432,7 @@ define
                end
             else
                TempDict=a()
-                  WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
+               WordRecord={TrainingWordFiles Last Parsed TempDict Ngram}
             end
 
             %Add the true Pickle loading with concatenation 
@@ -768,14 +770,6 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads nil}
-   %{Browse {List.length Parsed}}
-
-
-   %%Function to create the Window
-
-
-
-
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
