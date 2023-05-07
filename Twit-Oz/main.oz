@@ -86,9 +86,27 @@ define
    %%% Fetch Tweets Folder from CLI Arguments
    %%% See the Makefile for an example of how it is called
    fun {GetSentenceFolder}
-      Args = {Application.getArgs record('folder'(single type:string optional:false))}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
    in
       Args.'folder'
+   end
+
+   fun {NgramCLI}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+   in
+      Args.'ngram'
+   end
+
+   fun {SaveCLI}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+   in
+      Args.'save'
+   end
+
+   fun {RandomCLI}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+   in
+      Args.'random'
    end
 
    proc {DataThread Files Ports}
@@ -326,9 +344,9 @@ define
       end
    end
 
-   fun {TrainingWordHelper Word BigFiles Acc}
+   fun {TrainingWordHelper Word BigFiles Acc N}
       case BigFiles of nil then Acc
-      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H 2}  nil Acc 1}}
+      [] H|T then {TrainingWordHelper Word T {TrainingWord Word {NilatorHelp H N}  nil Acc 1} N}
       end
    end
 
@@ -338,10 +356,10 @@ define
 
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
-         {Browse Acc}
+         %{Browse Acc}
          Acc
       [] H|T then
-         NewAcc={TrainingWordHelper Word H Acc} 
+         NewAcc={TrainingWordHelper Word H Acc {GetN}} 
          {TrainingWordFiles Word T NewAcc N}
       end
    end
@@ -750,7 +768,14 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads nil}
-   {Browse {List.length Parsed}}
+   %{Browse {List.length Parsed}}
+
+
+   %%Function to create the Window
+
+
+
+
 
 %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
@@ -777,12 +802,16 @@ define
       )
       action:toplevel#close) % quitte le programme quand la fenetre est fermee)
 
-
+      % Parse args
+      NgramYes={NgramCLI}
+      SaveYes={SaveCLI}
+      RandomYes={RandomCLI}
    in
 
       local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort ReadFiles FeedbackUpdate Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
+      {Browse NgramYes}
       %Lis les fichiers
       ReadFiles={OpenMultipleFile {OS.getDir TweetsFolder}}
 
@@ -841,7 +870,7 @@ define
       lr(background:BGColor 
       glue:nw
       text(handle:OutputText width:50 height:10 background:black foreground:white glue:nw wrap:word)
-      message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w)
+      %message(init:"Pour mettre à jour la base de donnée, cliquez sur File puis Update Database" font:Font handle:FeedbackUpdate  padx:5 background:BGColor foreground:black glue:w)
       canvas(handle:C height:200 width:200 background:BGColor borderwidth:0 highlightthickness:0))
       action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
       )
