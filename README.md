@@ -2,6 +2,7 @@
 
 # projet-oz 
 - [projet-oz](#projet-oz)
+  - [Screenshots](#screenshots)
   - [Objectif](#objectif)
   - [Impératif](#impératif)
   - [Info fichier et fonction](#info-fichier-et-fonction)
@@ -13,6 +14,10 @@
   - [Implémentation](#implémentation)
   - [Pour aller plus loin](#pour-aller-plus-loin)
   - [Le rapport](#le-rapport)
+
+## Screenshots
+<img width="532" alt="Home Screen with the text 'Hello world' in input and 'Hello world is' in output with a 11% probability" src="https://user-images.githubusercontent.com/88899420/236921789-66ff3537-b765-4e7a-9fe0-034dfc8ecbf2.png"> <img width="532" alt="Home Screen with the Tool bar open showing all option such as save, delete tree, quit" src="https://user-images.githubusercontent.com/88899420/236921988-69c27708-e6cd-4ad2-ad69-07d9ddcb7300.png">
+
 
 
 ## Objectif
@@ -82,4 +87,4 @@ Ce document représente quasi la moitié des caractères de tous les autres docu
 
 
 ## Le rapport
-[Lien pour le modifier](https://www.overleaf.com/8871376581kvnffwqdhrqy)
+[LINFO1104___Brieuc_et_Thomas.pdf](https://github.com/BrieucDallemagne/projet-oz/files/11424712/LINFO1104___Brieuc_et_Thomas.pdf)
