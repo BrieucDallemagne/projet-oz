@@ -27,13 +27,10 @@ define
    InfiniteInput
    Parsed
    NbThreads
-   ListFile
    NumberWord
    DataBase
-   N % le N de N-gramme
    NgramHandle % son Handle
    Files
-   Akinator={QTk.newImage photo(file:"./Pic/akinator_1_defi.png" format:"png" height:100 width:100)}
    C
    D
    Running
@@ -235,8 +232,7 @@ define
 
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
-   proc {TrainingOneWord Word File Flag Acc} Size Retrieve Inc in
-      Size=NumberWord
+   proc {TrainingOneWord Word File Flag Acc} Retrieve Inc in
 
       case File of nil then skip
       [] H|T then
@@ -256,8 +252,7 @@ define
    end
 
    %Cherche parmis tous les fichiers (liste dans Files) un mot et retourner les probas d'avoir un tel comme second
-   proc {TrainingOneWordFiles Word Files Acc} Size NewAcc ByteFiles in
-      Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
+   proc {TrainingOneWordFiles Word Files Acc}
       
       case Files of nil then 
          %Because Dictionnary is not supported by pickle in Oz
@@ -365,7 +360,7 @@ define
       %Size=NumberWord % Nombre de mots, à remplacer par CountAllWords
 
       case Files of nil then 
-         %Because Dictionnary is not supported by pickle in Oz
+         {Pickle.saveWithHeader Acc "Pickle/Word/"#{Mashing {List.last {ClusterMaker Word 0 {GetN}}}}#".ozp" "sauvegarde en Pickle" 0}
          Acc
       [] H|T then
          NewAcc={TrainingWordHelper Word H Acc {GetN}} 
@@ -405,7 +400,7 @@ define
       end
    end
    
-   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last Dict TempDict TempRes PlaceHolder WordRecord TempAcc Dir BigWord SpiceTest in
+   proc {PressNgram InputHandle OutputHandle Ngram Result} InputText CleanText1 CleanText Last TempDict PlaceHolder WordRecord Dir BigWord SpiceTest in
       if Ngram =< 0 then
          {OutputHandle set(1:'There is no word like this')}
          Result=[[nil] 0]
@@ -473,7 +468,7 @@ define
 
    % Avoiding to pick twice the same word
    % File: Openmultiple files    Dict: Dict to store everything
-   proc {RemoveTwice File Dict} Res in
+   proc {RemoveTwice File Dict}
       case File of nil then skip
       [] H|T then
          if {Dictionary.member Dict {String.toAtom {ByteString.toString H}}} then
@@ -513,7 +508,7 @@ define
 
    %Function to create a new Database of words
    %Files: openmultiple result of a file
-   proc {TrainingAllWord Files} TrackWord SubFiles Clean Splited in
+   proc {TrainingAllWord Files} Clean Splited in
       Splited={SplitMultiple Files}
       Clean={RemoveTwiceAll Files}
       
@@ -585,7 +580,7 @@ define
    end
 
    %Take a string and remove extra space and newline 
-   fun {RemoveNewLine String} CleanText in
+   fun {RemoveNewLine String}
       case String
       of nil then nil
       [] H|T then
@@ -638,9 +633,9 @@ define
       {FullGramHelper {GetN} Parsed}
    end
 
-   proc {Save} F Input Ecrit in %To Save input 
+   proc {Save} F Input in %To Save input 
       {OutputText get(1:Input)}
-      F={New Open.file init(name:"User/"#{Mashing {Split Input}}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
+      F={New Open.file init(name:"User/"#{Mashing {Split {Clean Input}}.1}#".txt" flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
 
       {F write(vs:Input len:{List.length Input})}
       {F close()}
@@ -650,8 +645,8 @@ define
       Done={OS.system "make pickle"}
    end
 
-   proc {CleanUser} Done in
-      Done={OS.system "make user"}
+   proc {CleanUser}
+      _={OS.system "make user"}
    end
 
    fun {Reducing ListInput}
@@ -689,7 +684,6 @@ define
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
       CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
-      {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
       {OutputText set(1:{List.tokens {Mashing Result} & })}
    end
@@ -800,13 +794,9 @@ define
       )
       action:toplevel#close) % quitte le programme quand la fenetre est fermee)
 
-      % Parse args
-      NgramYes={NgramCLI}
-      SaveYes={SaveCLI}
-      RandomYes={RandomCLI}
    in
 
-      local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort ReadFiles FeedbackUpdate Newcommers in
+      local Description Window ReadFiles FeedbackUpdate Newcommers in
       {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
       %Lis les fichiers

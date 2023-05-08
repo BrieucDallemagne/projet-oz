@@ -84,29 +84,38 @@ define
    %%% Fetch Tweets Folder from CLI Arguments
    %%% See the Makefile for an example of how it is called
    fun {GetSentenceFolder}
-      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:true) 'save'(single type:string optional:true) 'random'(single type:string optional:true) 'nbthreads'(single type:string optional:false))}
    in
       Args.'folder'
    end
 
    fun {NgramCLI}
-      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:true) 'save'(single type:string optional:true) 'random'(single type:string optional:true) 'nbthreads'(single type:string optional:false))}
    in
       Args.'ngram'
    end
 
    fun {SaveCLI}
-      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:true) 'save'(single type:string optional:true) 'random'(single type:string optional:true) 'nbthreads'(single type:string optional:false))}
    in
       Args.'save'
    end
 
    fun {RandomCLI}
-      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:false) 'save'(single type:string optional:false) 'random'(single type:string optional:false))}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:true) 'save'(single type:string optional:true) 'random'(single type:string optional:true) 'nbthreads'(single type:string optional:false))}
    in
       Args.'random'
    end
 
+   fun {NBThreadsCLI}
+      Args = {Application.getArgs record('folder'(single type:string optional:false) 'ngram'(single type:string optional:true) 'save'(single type:string optional:true) 'random'(single type:string optional:true) 'nbthreads'(single type:string optional:false))}
+   in
+      if {String.isInt Args.'nbthreads'} then
+         {String.toInt Args.'nbthreads'}
+      else
+         8
+      end
+   end
    proc {DataThread Files Ports}
       thread {Send Ports  {SplitMultiple{List.map {OpenMultipleFile Files} Clean} }}end
    end
@@ -757,7 +766,7 @@ define
    end
 
    SeparatedWordsPort = {NewPort SeparatedWordsStream}
-   WantedNbThreads=8
+   WantedNbThreads={NBThreadsCLI}
 
    if {List.length {OS.getDir {GetSentenceFolder}}} < WantedNbThreads then
       NbThreads={List.length {OS.getDir {GetSentenceFolder}}}
