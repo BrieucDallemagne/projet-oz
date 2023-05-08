@@ -684,7 +684,6 @@ define
    proc {CorrectInput} Input Result CorrectWord in
       {InputText get(1:Input)}
       CorrectWord={List.map {RemoveTwiceAll {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}} Atom.toString} % Accelerate process using Parsedµ
-      {Delay 1000}
       Result={CorrectInputSecond {List.length Input} CorrectWord {Split {Clean Input}}}
       {OutputText set(1:{List.tokens {Mashing Result} & })}
    end
