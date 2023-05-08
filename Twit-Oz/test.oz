@@ -1,6 +1,12 @@
 declare    
-Test=a(hello:1 you:1 and:1 nope:0)
-I=0
+Test=['hello' 'world' 'yo']
+Test1=['lmao']
 
-{Browse {Record.dropWhile Test fun{$ O} {Browse O} true end}}
-{Browse {Record.mapInd Test fun{$ A B} a(A) end}}
+fun {FuseList ListOne ListTwo} 
+    case ListTwo of nil then ListOne
+    [] H|T then {FuseList ListOne|H T}
+    end
+ end
+
+{Browse {FuseList Test Test1}}
+{Browse Test|Test1}

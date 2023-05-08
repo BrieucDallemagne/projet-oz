@@ -304,6 +304,12 @@ define
       end
    end
 
+   fun {FuseList ListOne ListTwo} 
+      case ListOne of nil then ListTwo
+      [] H|T then {FuseList T H|ListTwo}
+      end
+   end
+
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
    fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
@@ -318,7 +324,7 @@ define
             if Track == 2 then
                {TrainingWord Word H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
             else
-               {TrainingWord Word {List.take PassFile 1}.1|H|T PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
+               {TrainingWord Word {List.append {List.take PassFile {GetN}-1} H|T} PassFile {Record.adjoin Acc a(Name : Retrieve)} 1}
             end
          else
             if H=={List.nth Word Track} then
