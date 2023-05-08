@@ -165,17 +165,11 @@ define
       [] H|T then {NilatorHelp H Ngram}|{Nilator T Ngram}
       end
    end
-   
-   fun {SplitHelper Input}
-      case Input of nil then nil
-      [] H|T then {List.filter {String.tokens H & } fun {$ O} O \= nil end}|{SplitHelper T}
-      end
-   end
-   
-   fun {Split Input}
-      {SplitHelper {String.tokens {Clean Input} &.}}
-   end
 
+   fun {Split Input}
+      [{List.filter {String.tokens {Clean Input} & } fun{$ O} O\=nil end}]
+   end
+  
    fun {SplitMultiple ListInput}
          case ListInput of nil then nil
          [] H|T then {Split H}|{SplitMultiple T}
@@ -226,7 +220,7 @@ define
       case Input of nil then nil
       [] H|T then 
          if {Char.isCntrl H} then
-            32|46|32|{Clean T}
+            32|{Clean T}
          else 
             if {Char.isAlNum H} then
                   if H >= 126 then
@@ -236,7 +230,7 @@ define
                   end
             else
                if {Char.isPunct H} then
-                  32|46|32|{Clean T}
+                  32|{Clean T}
                else
                   32|{Clean T}
                end
@@ -254,7 +248,7 @@ define
       else
          %To get the user's input
          {InputHandle get(1:InputText)}
-         CleanText1={List.last {List.filter {List.filter {Split {Clean InputText}} fun{$ O} O \= "." end} fun{$ O} O \= nil end}}
+         CleanText1={List.last {List.filter {Split {Clean InputText}} fun{$ O} O \= nil end}}
          if {List.length CleanText1} == 0 then
             Result=[[nil] 0]
          else 
@@ -287,7 +281,7 @@ define
    end
 
    fun {Press} Result in
-      {PressNgram InputText OutputText 1 Result} %mettre 2 au lieu de 1
+      {PressNgram InputText OutputText 2 Result} %mettre 2 au lieu de 1
       {Browse Result}
       Result
    end
