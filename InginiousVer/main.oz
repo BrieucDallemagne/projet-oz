@@ -91,7 +91,6 @@ define
    %Word: le mot en byteString à trouver     File: un fichier lu et séparé en byteString
    %Flag: si le mot précédent est bien Word  Acc: contient un Dictionnaire qui est mis à jour 
    fun {TrainingWord Word File PassFile Acc Track} Retrieve Name in
-      %{Browse File}
 
       case File of nil then 
          Acc
@@ -287,18 +286,6 @@ define
       end
    end
 
-   
-   %%% /!\ Fonction testee /!\
-   %%% @pre : les threads sont "ready"
-   %%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
-   %%%        Affiche la prediction la plus probable du prochain mot selon les deux derniers mots entres
-   %%% @return: Retourne une liste contenant la liste du/des mot(s) le(s) plus probable(s) accompagnee de 
-   %%%          la probabilite/frequence la plus elevee. 
-   %%%          La valeur de retour doit prendre la forme:
-   %%%                  <return_val> := <most_probable_words> '|' <probability/frequence> '|' nil
-   %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
-   %%%                                           | nil
-   %%%                  <probability/frequence> := <int> | <float>
    fun {Press} Result in
       {PressNgram InputText OutputText 1 Result} %mettre 2 au lieu de 1
       {Browse Result}
@@ -343,31 +330,14 @@ define
    {LaunchThreads SeparatedWordsPort NbThreads}
 
    Parsed = {ForList SeparatedWordsStream NbThreads nil}
-   %{Browse {List.length Parsed}}
-
-   %%% Decomnentez moi si besoin
-   %proc {ListAllFiles L}
-   %   case L of nil then skip
-   %   [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
-   %   end
-   %end
     
    %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
    proc {Main}
       TweetsFolder = {GetSentenceFolder}
    in
-      %% Fonction d'exemple qui liste tous les fichiers
-      %% contenus dans le dossier passe en Argument.
-      %% Inspirez vous en pour lire le contenu des fichiers
-      %% se trouvant dans le dossier
-      %%% N'appelez PAS cette fonction lors de la phase de
-      %%% soumission !!!
-      % {ListAllFiles {OS.getDir TweetsFolder}}
        
       local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort in
 	 {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
-	 
-            % TODO
 	 
             % Creation de l interface graphique
 	 Description=td(
