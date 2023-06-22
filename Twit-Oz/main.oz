@@ -535,27 +535,64 @@ define
       end 
    end      
 
+   fun {RemoveEnd PathList}
+      case PathList
+      of nil then "" 
+      [] H|T then 
+         if T == nil then 
+            "" 
+         else
+            if T.2 == nil then 
+               H#{RemoveEnd T}
+            else
+               H#"/"#{RemoveEnd T}
+            end
+         end
+      end
+   end
+
+
+   proc{Reading Input} Test Content Before After Garbage TweetSnip Rest Res NewMake NewFile Path WOTxt TXT CleanPath in
+
+      thread
+         Path={QTk.dialogbox load(initialdir:"./" title:"New Tweets Folder" $)}
+      end
+      if Path==nil then
+         skip
+      else
+         {String.token Path &. WOTxt TXT}
+         %{Browse {String.toAtom Path}}
+         CleanPath = {VirtualString.toString {RemoveEnd {String.tokens WOTxt &/}}}
+      end
+
+      Test = {New Open.file init(name:{String.toAtom Input} flags:[read])}
+      {Test read(list:Content size:all)}
+
+      {String.token Content &= Before After}
+      {String.token After &" Garbage Rest}
+      {String.token Rest &" TweetSnip Res}
+
+      %{Browse {String.toAtom Before}}
+      %{Browse {String.toAtom Rest}}
+      %{Browse {String.toAtom TweetSnip}}
+      %{Browse {String.toAtom Res}}
+
+      NewMake = Before#{Atom.toString '="'}#CleanPath#{Atom.toString '"'}#Res 
+      %{Browse {String.toAtom {VirtualString.toString NewMake}}}
+
+      {Test close}
+
+      NewFile = {New Open.file init(name:'Makefile' flags:[write] mode:mode(owner:[write] all:[write] group:[write] others:[write]))}
+      {NewFile write(vs:{VirtualString.toString NewMake} len:{List.length {VirtualString.toString NewMake}})}
+      {NewFile close}
+   end
 
    %To Update the databse It looks to every file in the directory to count word and TODO clean every pickle or force to always redo pickle
    proc {UpdateDatabase Handle} Test PidI StatusT OSType Info in
-      {Handle set(1:"Démarrage du procéssus cela peut prendre quelques minutes" foreground:red)}
-      OSType={GetOs}
-      Test={CountAllWords {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
+      {InputText set(1:"Starting the process" foreground:c(255 0 0))}
+      {Reading "Makefile"} % To target the makefile
+      {InputText set(1:"Succes, please restart the app with make run" foreground:c(55 200 50))}
 
-      {Pickle.saveWithHeader Test "Pickle/NumberWord.ozp" "Nombre mots" 0} % 0 à 9 et au + haut au + compressé
-
-      if OSType=="Linux" then
-         {OS.pipe "sh Pickle/Update.sh" "" PidI StatusT}
-         Info=" "
-      else
-         PidI={OS.system "ls"}
-         StatusT={OS.system "make pickle"}
-         Info="\n ATTENTION Pour forcer la mise à jour de tous les mots, veuillez supprimer les fichiers contenu dans Twit-Oz/Pickle/Word (cela est dû à une limitation du langage)"
-      end
-
-      {TrainingAllWord {OpenMultipleFile {OS.getDir {GetSentenceFolder}}}}
-
-      {Handle set(1:"La base de donnée à été mise à jour avec succès!"#Info foreground:green)}
    end
 
    %Just a Helper procedure to dipslay all Keys of dictionary. YOU SHOULD CALL {DisplayDict Dic} RATHER

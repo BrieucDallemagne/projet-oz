@@ -7,6 +7,7 @@ ENTRY_POINT=main.ozf
 NGRAM=true
 SAVE=true
 RANDOM=true
+NBTHREAD=16
 
 
 ifeq ($(UNAME_S),Darwin)
@@ -23,7 +24,7 @@ all : $(ENTRY_POINT)
 	$(OZC) -c $< -o "$@"
 
 run: $(ENTRY_POINT) 
-	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER) --ngram $(NGRAM) --save $(SAVE) --random $(RANDOM)
+	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER) --nbthread $(NBTHREAD)
 
 testrun: $(ENTRY_POINT) 
 	$(OZENGINE) $(ENTRY_POINT) --folder $(TEST_FOLDER)
